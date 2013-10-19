@@ -39,7 +39,7 @@ sub new {
 
 sub connect {
   my $self = shift;
-printf "sub connect of %s\n", ref($self);
+  chdir("/tmp");
   if (eval "require sapnwrfc") {
     my %params = (
       'lcheck' => '1',
