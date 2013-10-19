@@ -36,10 +36,10 @@ my $plugin = Nagios::MiniPlugin->new(
     shortname => '',
     usage => 'Usage: %s [ -v|--verbose ] [ -t <timeout> ] '.
         '--mode <what-to-do> '.
-        '--hostname <network-component> --community <snmp-community>'.
+        '--ashost <hostname> --sysnr <system number> '.
         '  ...]',
     version => $REVISION,
-    blurb => 'This plugin checks various parameters of network components ',
+    blurb => 'This plugin checks sap netweaver ',
     url => 'http://labs.consol.de/nagios/check_sap_health',
     timeout => 60,
     shortname => '',
@@ -135,7 +135,7 @@ if ($plugin->opts->multiline) {
 }
 if (! $plugin->opts->statefilesdir) {
   if (exists $ENV{OMD_ROOT}) {
-    $plugin->override_opt('statefilesdir', $ENV{OMD_ROOT}."/var/tmp/check_nwc_health");
+    $plugin->override_opt('statefilesdir', $ENV{OMD_ROOT}."/var/tmp/check_sap_health");
   } else {
     $plugin->override_opt('statefilesdir', $STATEFILESDIR);
   }
