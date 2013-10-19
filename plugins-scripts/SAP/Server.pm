@@ -67,8 +67,15 @@ sub connect {
       $params{trace} = '1';
     }
     $self->{tic} = Time::HiRes::time();
-    my $session = SAPNW::Rfc->rfc_connect(%params);
-    if (! defined $session) {
+    my $session = undef;
+    eval {
+      $session = SAPNW::Rfc->rfc_connect(%params);
+    };
+    if ($@) {
+      $self->add_message(CRITICAL,
+          sprintf 'cannot create rfc connection: %s', $@);
+      $self->debug(Data::Dumper::Dumper(\%params));$
+    } elsif (! defined $session) {
       $self->add_message(CRITICAL,
           sprintf 'cannot create rfc connection');
       $self->debug(Data::Dumper::Dumper(\%params));
