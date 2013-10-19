@@ -88,8 +88,9 @@ sub init {
     $self->{connection_time} = $self->{tac} - $self->{tic};
     $self->set_thresholds(warning => 1, critical => 5);
     $self->add_message($self->check_thresholds($self->{connection_time}), 
-         sprintf "%.2f seconds to connect as %s",
-              $self->{connection_time}, $self->opts->username);
+         sprintf "%.2f seconds to connect as %s@%s",
+              $self->{connection_time}, $self->opts->username,
+              $SAP::Server::session->connection_attributes->{sysId});
     $self->add_perfdata(
         label => 'connection_time',
         value => $self->{connection_time},
