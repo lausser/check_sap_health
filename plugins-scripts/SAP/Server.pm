@@ -67,20 +67,13 @@ printf "sub connect of %s\n", ref($self);
       $params{trace} = '1';
     }
     $self->{tic} = Time::HiRes::time();
-printf "i connect\n";
     my $session = SAPNW::Rfc->rfc_connect(%params);
-                                     #sysnr => '01', 
-                                     #client => '001',
-                                     #user => 'developer', 
-                                     #passwd => 'developer');
-printf "connected a session\n";
     if (! defined $session) {
       $self->add_message(CRITICAL,
           sprintf 'cannot create rfc connection');
       $self->debug(Data::Dumper::Dumper(\%params));
     } else {
       $SAP::Server::session = $session;
-printf "have a session\n";
     }
   } else {
       $self->add_message(CRITICAL,
@@ -91,7 +84,6 @@ printf "have a session\n";
 
 sub init {
   my $self = shift;
-printf "server init\n";
   if ($self->mode =~ /^server::connectiontime/) {
     $self->{connection_time} = $self->{tac} - $self->{tic};
     $self->set_thresholds(warning => 1, critical => 5);
@@ -110,15 +102,12 @@ printf "server init\n";
   } elsif ($self->mode =~ /^my::([^:.]+)/) {
     my $class = $1;
     my $loaderror = undef;
-printf "in my\n";
     substr($class, 0, 1) = uc substr($class, 0, 1);
     foreach my $libpath (split(":", $SAP::Server::my_modules_dyn_dir)) {
       foreach my $extmod (glob $libpath."/CheckSapHealth*.pm") {
         eval {
           $self->debug(sprintf "loading module %s", $extmod);
-printf "i will require %s\n", $extmod;
           require $extmod;
-printf "required\n";
         };
         if ($@) {
           $loaderror = $extmod;
@@ -126,7 +115,6 @@ printf "required\n";
         }
       }
     }
-printf "now obj my\n";
     my $obj = {
         session => $SAP::Server::session,
         warning => $self->opts->warning,
@@ -143,7 +131,6 @@ printf "now obj my\n";
           $self->add_message(UNKNOWN,
               sprintf "Class %s needs an init() method", ref($self->{my}));
       } else {
-printf "call myinit\n";
         $self->{my}->init();
       }
     } else {
@@ -153,7 +140,6 @@ printf "call myinit\n";
               $loaderror ? sprintf " (syntax error in %s?)", $loaderror : "" );
     }
   }
-printf "servier init off\n";
 }
 
 sub nagios {
@@ -194,6 +180,7 @@ sub add_message {
   my $self = shift;
   my $level = shift;
   my $message = shift;
+  chomp $message;
   $SAP::Server::plugin->add_message($level, $message)
       unless $self->{blacklisted};
   if (exists $self->{failed}) {
