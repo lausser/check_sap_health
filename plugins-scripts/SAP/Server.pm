@@ -74,7 +74,7 @@ sub connect {
     if ($@) {
       $self->add_message(CRITICAL,
           sprintf 'cannot create rfc connection: %s', $@);
-      $self->debug(Data::Dumper::Dumper(\%params));$
+      $self->debug(Data::Dumper::Dumper(\%params));
     } elsif (! defined $session) {
       $self->add_message(CRITICAL,
           sprintf 'cannot create rfc connection');
@@ -92,6 +92,16 @@ sub connect {
 sub init {
   my $self = shift;
   if ($self->mode =~ /^server::connectiontime/) {
+    my $fc = undef;
+    if ($self->mode =~ /^server::connectiontime::sapinfo/) {
+      eval {
+        my $fl = $self->session->function_lookup("RFC_SYSTEM_INFO");
+        $fc = $fl->create_function_call;
+        $fc->invoke();
+        printf "rrc %s\n", Data::Dumper::Dumper($fc->RFCSI_EXPORT);
+      };
+      $self->{tac} = Time::HiRes::time();
+    }
     $self->{connection_time} = $self->{tac} - $self->{tic};
     $self->set_thresholds(warning => 1, critical => 5);
     $self->add_message($self->check_thresholds($self->{connection_time}), 
@@ -104,9 +114,10 @@ sub init {
         warning => $self->{warning},
         critical => $self->{critical},
     );
-    my ($code, $message) = $self->check_messages(join => ', ', join_all => ', ');
-    $SAP::Server::plugin->nagios_exit($code, $message);
-
+    if ($self->mode =~ /^server::connectiontime::sapinfo/) {
+      # extraoutput
+      # $fc
+    }
   } elsif ($self->mode =~ /^my::([^:.]+)/) {
     my $class = $1;
     my $loaderror = undef;
@@ -177,6 +188,11 @@ sub debug {
       $logfh->close();
     }
   }
+}
+
+sub session {
+  my $self = shift;
+  return $SAP::Server::session;
 }
 
 sub mode {

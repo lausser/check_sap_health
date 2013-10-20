@@ -21,6 +21,9 @@ my @modes = (
   ['server::connectiontime',
       'connection-time', undef,
       'Time to connect to the server' ],
+  ['server::connectiontime::sapinfo',
+      'sapinfo', undef,
+      'Time to connect and show system atttributes like sapinfo' ],
 );
 my $modestring = "";
 my $longest = length ((reverse sort {length $a <=> length $b} map { $_->[1] } @modes)[0]);
