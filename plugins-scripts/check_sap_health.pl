@@ -24,6 +24,18 @@ my @modes = (
   ['server::connectiontime::sapinfo',
       'sapinfo', undef,
       'Time to connect and show system atttributes like sapinfo' ],
+  ['server::ccms::moniset::list',
+      'list-ccms-monitor-sets', undef,
+      'List all available monitor sets' ],
+  ['server::ccms::monitor::list',
+      'list-ccms-monitors', undef,
+      'List all monitors (can be restricted to a monitor set with --name)' ],
+  ['server::ccms::mte::list',
+      'list-ccms-mtes', undef,
+      'List all MTEs (must be restricted to a monitor set / monitor with --name/--name2)' ],
+  ['server::ccms::mte::check',
+      'ccms-mte-check', undef,
+      'Check all MTEs (must be restricted to a monitor set / monitor with --name/--name2)' ],
 );
 my $modestring = "";
 my $longest = length ((reverse sort {length $a <=> length $b} map { $_->[1] } @modes)[0]);
@@ -108,6 +120,24 @@ $plugin->add_arg(
     spec => 'name=s',
     help => "--name
    The name of whatever",
+    required => 0,
+);
+$plugin->add_arg(
+    spec => 'name2=s',
+    help => "--name2
+   The secondary name of whatever",
+    required => 0,
+);
+$plugin->add_arg(
+    spec => 'name3=s',
+    help => "--name3
+   The tertiary name of whatever",
+    required => 0,
+);
+$plugin->add_arg(
+    spec => 'separator=s',
+    help => "--separator
+   A separator for MTE path elements",
     required => 0,
 );
 $plugin->add_arg(

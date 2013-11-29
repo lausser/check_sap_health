@@ -13,6 +13,8 @@ libexec_SCRIPTS=check_sap_health
 MY_MODULES=
 EXTRA_MODULES=\
   Nagios/MiniPlugin.pm \
+  SAP/MTE.pm \
+  SAP/CCMS.pm \
   SAP/Server.pm
 EXTRA_DIST=check_sap_health.pl $(EXTRA_MODULES)
 
@@ -36,7 +38,7 @@ $(libexec_SCRIPTS) : $(EXTRA_DIST)
 	$(ECHO) "#! #PERL# -w" | $(AWK) -f ./subst > $@
 	$(ECHO) >> $@
 	for m in ${EXTRA_MODULES}; do \
-		$(SED) -e 's/^1;//g' < $$m | $(AWK) -f ./subst >> $@; \
+		$(SED) -e 's/^1;//g' < $$m | $(SED) -e '/^__END__/,$$d' | $(AWK) -f ./subst >> $@; \
 	done
 	$(ECHO) "package main;" >> $@
 	$(CAT) check_sap_health.pl | $(AWK) -f ./subst >> $@

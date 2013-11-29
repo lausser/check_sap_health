@@ -14,14 +14,11 @@ use constant { OK => 0, WARNING => 1, CRITICAL => 2, UNKNOWN => 3 };
 {
   our $mode = undef;
   our $plugin = undef;
-  our $blacklist = undef;
   our $session = undef;
-  our $rawdata = {};
   our $info = [];
   our $extendedinfo = [];
   our $summary = [];
   our $statefilesdir = '/var/tmp/check_sap_health';
-  our $oidtrace = [];
   our $uptime = 0;
 }
 
@@ -33,6 +30,9 @@ sub new {
   };
   bless $self, $class;
   $SAP::Server::statefilesdir = $self->opts->statefilesdir;
+  if ($self->opts->separator) {
+    $MTE::separator = $self->opts->separator;
+  }
   $self->connect();
   return $self;
 }
@@ -68,6 +68,9 @@ sub connect {
     }
     $self->{tic} = Time::HiRes::time();
     my $session = undef;
+    if ($self->opts->mode =~ /sapinfo/) { 
+die;
+    }
     eval {
       $session = SAPNW::Rfc->rfc_connect(%params);
     };
@@ -118,6 +121,9 @@ sub init {
       # extraoutput
       # $fc
     }
+  } elsif ($self->mode =~ /^server::ccms::/) {
+    bless $self, 'SAP::CCMS';
+    $self->init();
   } elsif ($self->mode =~ /^my::([^:.]+)/) {
     my $class = $1;
     my $loaderror = undef;
@@ -190,6 +196,22 @@ sub debug {
   }
 }
 
+sub rstrip {
+  my $self = shift;
+  my $message = shift;
+  $message =~ s/\s+$//g;
+  chomp $message;
+  return $message;
+}
+
+sub strip {
+  my $self = shift;
+  my $message = shift;
+  $message =~ s/^\s+//g;
+  $message = $self->rstrip($message);
+  return $message;
+}
+
 sub session {
   my $self = shift;
   return $SAP::Server::session;
@@ -203,8 +225,8 @@ sub mode {
 sub add_message {
   my $self = shift;
   my $level = shift;
-  my $message = shift;
-  chomp $message;
+  my $message = $self->strip(shift);
+  $message =~ s/[^[:ascii:]]//g;
   $SAP::Server::plugin->add_message($level, $message)
       unless $self->{blacklisted};
   if (exists $self->{failed}) {
@@ -324,6 +346,7 @@ sub DESTROY {
   if ($SAP::Server::session) {
     $SAP::Server::session->disconnect();
   }
+  $self->debug("disconnected");
 }
 
 
