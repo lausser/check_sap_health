@@ -212,6 +212,66 @@ sub strip {
   return $message;
 }
 
+sub filter_name {
+  my $self = shift;
+  my $name = shift;
+  if ($self->opts->name) {
+    if ($self->opts->regexp) {
+      my $pattern = $self->opts->name;
+      if ($name =~ /$pattern/i) {
+        return 1;
+      }
+    } else {
+      if (lc $self->opts->name eq lc $name) {
+        return 1;
+      }
+    }
+  } else {
+    return 1;
+  }
+  return 0;
+}
+
+sub filter_name2 {
+  my $self = shift;
+  my $name = shift;
+  if ($self->opts->name2) {
+    if ($self->opts->regexp) {
+      my $pattern = $self->opts->name2;
+      if ($name =~ /$pattern/i) {
+        return 1;
+      }
+    } else {
+      if (lc $self->opts->name2 eq lc $name) {
+        return 1;
+      }
+    }
+  } else {
+    return 1;
+  }
+  return 0;
+}
+
+sub filter_name3 {
+  my $self = shift;
+  my $name = shift;
+  if ($self->opts->name3) {
+    if ($self->opts->regexp) {
+      my $pattern = $self->opts->name3;
+      if ($name =~ /$pattern/i) {
+        return 1;
+      }
+    } else {
+      if (lc $self->opts->name3 eq lc $name) {
+        return 1;
+      }
+    }
+  } else {
+    return 1;
+  }
+  return 0;
+}
+
 sub session {
   my $self = shift;
   return $SAP::Server::session;

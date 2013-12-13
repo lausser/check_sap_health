@@ -1,8 +1,14 @@
 package MTE;
 
-our @ISA = qw(SAP::CCMS);
+#our @ISA = qw(SAP::CCMS);
+# can't inherit, because this undefines the session handle. hurnmatz, greisliche
 
 use strict;
+
+use constant OK         => 0;
+use constant WARNING    => 1;
+use constant CRITICAL   => 2;
+use constant UNKNOWN    => 3;
 
 # http://www.benx.de/en/sap/program/RSALBAPI---code.htm
 use constant MT_CLASS_NO_CLASS    => 0;
@@ -18,9 +24,46 @@ use constant MT_CLASS_SHORTTEXT   => 111;
 use constant MT_CLASS_VIRTUAL     => 199;
 
 
+# Attribute Type
+#  Description
+#  
+# This graphic is explained in the accompanying text Performance Attribute
+#  Collects reported performance values and calculates the average
+#  
+# This graphic is explained in the accompanying text Status Attribute
+#  Reports error message texts and alert status
+#  
+# This graphic is explained in the accompanying text Heartbeat Attribute
+#  Checks whether components of the SAP system are active; if no values are reported for a monitoring attribute for a long time, it triggers an alert
+#  
+# This graphic is explained in the accompanying text Log Attribute
+#  Checks log and trace files (these attributes can use an existing log mechanism, such as the SAP system log, or they can be used by an application for the implementation of a separate log)
+#  
+# This graphic is explained in the accompanying text Text Attribute
+#  Allows a data supplier to report information that is not evaluated for alerts; the text can be updated as required
+#  
 
 
 our $separator = "\\";
+
+{
+  sub sap2nagios {
+    my $sap = shift;
+    my $nagios = 0;
+    if ($sap == 1) {
+      return OK;
+    } elsif ($sap == 2) {
+      return WARNING;
+    } elsif ($sap == 3) {
+      return CRITICAL;
+    } elsif ($sap == 4) {
+      return UNKNOWN;
+    } else {
+      return UNKNOWN;
+    }
+  }
+}
+
 
 sub new {
   my $class = shift;
@@ -39,6 +82,8 @@ sub new {
   $self->{TID} = $self->tid();
   if ($self->{MTCLASS} == MT_CLASS_PERFORMANCE) {
     bless $self, "MTE::Performance";
+  } elsif ($self->{MTCLASS} == MT_CLASS_MSG_CONT) {
+    bless $self, "MTE::ML";
   }
   return $self;
                 my $bapi = {
@@ -87,8 +132,19 @@ sub collect_details {
   $self->{ACTUAL_ALERT_DATA_LEVEL} = $fc->ACTUAL_ALERT_DATA->{LEVEL};
 }
 
-sub nagios {
+sub perfdata {
   my $self = shift;
+  return {};
+}
+
+sub nagios_level {
+  my $self = shift;
+  return MTE::sap2nagios($self->{ACTUAL_ALERT_DATA_VALUE});
+}
+
+sub nagios_message {
+  my $self = shift;
+  return "";
 }
 
 sub tid {
@@ -123,8 +179,14 @@ sub rstrip {
 sub strip {
   my $self = shift;
   my $message = shift;
-  $message =~ s/^\s+//g;
-  $message = $self->rstrip($message);
+  if (ref($message) eq "HASH") {
+    foreach (keys %{$message}) {
+      $self->strip($message->{$_});
+    }
+  } else {
+    $message =~ s/^\s+//g;
+    $message = $self->rstrip($message);
+  }
   return $message;
 }
 
@@ -137,7 +199,7 @@ sub collect_details {
   my $self = shift;
   my $session = shift;
   $self->SUPER::collect_details($session);
-  my $fl = $self->session->function_lookup("BAPI_SYSTEM_MTE_GETPERFCURVAL");
+  my $fl = $session->function_lookup("BAPI_SYSTEM_MTE_GETPERFCURVAL");
   my $fc = $fl->create_function_call;
   $fc->TID($self->tid);
   $fc->EXTERNAL_USER_NAME("CHECK_SAP_HEALTH");
@@ -147,7 +209,7 @@ sub collect_details {
       LASTALSTAT AVG01CVAL AVG05CVAL MINPFTIME AVG05SVAL)) {
     $self->{$_} = $self->strip($fc->CURRENT_VALUE->{$_});
   }
-  $fl = $self->session->function_lookup("BAPI_SYSTEM_MTE_GETPERFPROP");
+  $fl = $session->function_lookup("BAPI_SYSTEM_MTE_GETPERFPROP");
   $fc = $fl->create_function_call;
   $fc->TID($self->tid);
   $fc->EXTERNAL_USER_NAME("CHECK_SAP_HEALTH");
@@ -177,8 +239,35 @@ sub perfdata {
   #critical
 }
 
-sub nagios {
+sub nagios_message {
   my $self = shift;
-  return {};
+  return return sprintf "%s %s = %s%s",
+      $self->{OBJECTNAME}, $self->{MTNAMESHRT},
+      $self->{ALRELEVVAL}, $self->{VALUNIT};
 }
+
+
+package MTE::ML;
+
+our @ISA = qw(MTE);
+
+sub collect_details {
+  my $self = shift;
+  my $session = shift;
+  $self->SUPER::collect_details($session);
+  my $fl = $session->function_lookup("BAPI_SYSTEM_MTE_GETMLCURVAL");
+  my $fc = $fl->create_function_call;
+  $fc->TID($self->tid);
+  $fc->EXTERNAL_USER_NAME("CHECK_SAP_HEALTH");
+  $fc->invoke;
+  foreach (qw(MSG)) {
+    $self->{$_} = $self->strip($fc->XMI_MSG_EXT->{$_});
+  }
+}
+
+sub nagios_message {
+  my $self = shift;
+  return $self->{MTNAMESHRT}." = ".$self->{MSG};
+}
+
 

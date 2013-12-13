@@ -19,6 +19,7 @@ use constant MT_CLASS_HEARTBEAT   => 103;
 use constant MT_CLASS_LONGTEXT    => 110;
 use constant MT_CLASS_SHORTTEXT   => 111;
 use constant MT_CLASS_VIRTUAL     => 199;
+# skip 50, 70, 110, 111, 199
 
 use constant AL_VAL_INAKTIV => 0;
 use constant AL_VAL_GREEN => 1;
@@ -50,7 +51,6 @@ sub init {
       $fc->INTERFACE('XAL');
       $fc->parameter('VERSION')->value($xalversion);
       $fc->invoke;
-printf "%s\n", $self->mode;
       if ($fc->RETURN->{TYPE} !~ /^E/) {
         if ($self->mode =~ /server::ccms::moniset::list/) {
           $fl = $self->session->function_lookup("BAPI_SYSTEM_MS_GETLIST");
@@ -99,37 +99,33 @@ printf "%s\n", $self->mode;
           if ($fc->RETURN->{TYPE} =~ /^E/) {
             $self->add_message(CRITICAL, $fc->RETURN->{MESSAGE});
           } else {
-            my @nodes = @{$fc->TREE_NODES};
-            my @mtes = map { MTE->new(%{$_}); } @nodes;
-            #my @mtes = map { MTE->new(%{$_}); } @{$fc->TREE_NODES};
-            @mtes = sort { $a->{MTNAMELONG} cmp $b->{MTNAMELONG} } @mtes;
+            my @mtes = sort {
+                $a->{MTNAMELONG} cmp $b->{MTNAMELONG}
+            } grep {
+              $self->filter_name3($_->{MTNAMELONG})
+            } map { 
+                MTE->new(%{$_});
+            } @{$fc->TREE_NODES};
             if ($self->mode =~ /server::ccms::mte::list/) {
               foreach my $mte (@mtes) {
-#printf "%s\n", Data::Dumper::Dumper($mte);
-                printf "%s\n", $mte->{MTNAMELONG};
+                printf "%s %d\n", $mte->{MTNAMELONG}, $mte->{MTCLASS};
               }
             } elsif ($self->mode =~ /server::ccms::mte::check/) {
-
               foreach my $mte (@mtes) {
-                printf "and now %s\n", $mte->{MTNAMELONG};
-        #        $mte->collect_details($self->session);
-                printf "and sess %s\n", ref($self->session);
-printf "perf %s\n", Data::Dumper::Dumper($mte->nagios());
-        my $fl = $self->session->function_lookup("RFC_SYSTEM_INFO");
-        $fc = $fl->create_function_call;
-        $fc->invoke();
-        printf "rrc %s\n", Data::Dumper::Dumper($fc->RFCSI_EXPORT);
-                next if $mte->{ACTUAL_ALERT_DATA_VALUE} == 0;
-
-                if (keys %{$mte->nagios()}) {
-$self->add_perfdata(%{$mte->nagios()});
+                next if ! grep $mte->{MTCLASS}, (100, 101);
+                #next if $mte->{ACTUAL_ALERT_DATA_VALUE} == 0;
+                $mte->collect_details($self->session);
+                if (keys %{$mte->perfdata()}) {
+                  $self->add_perfdata(%{$mte->perfdata()});
                 }
+                $self->add_message($mte->nagios_level(), $mte->nagios_message());
+              }
+              if (! @mtes) {
+                $self->add_message(UNKNOWN, "no mtes");
               }
             }
           }
         }
-printf "done. logoff xal\n";
-                printf "and sess %s\n", ref($self->session);
         $fl = $self->session->function_lookup("BAPI_XMI_LOGOFF");
         $fc = $fl->create_function_call;
         $fc->INTERFACE('XAL');

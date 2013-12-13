@@ -135,6 +135,12 @@ $plugin->add_arg(
     required => 0,
 );
 $plugin->add_arg(
+    spec => 'regexp',
+    help => "--regexp
+   Parameter name/name2/name3 will be interpreted as (perl) regular expression",
+    required => 0,
+);
+$plugin->add_arg(
     spec => 'separator=s',
     help => "--separator
    A separator for MTE path elements",
