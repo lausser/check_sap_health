@@ -84,6 +84,8 @@ sub new {
     bless $self, "MTE::Performance";
   } elsif ($self->{MTCLASS} == MT_CLASS_MSG_CONT) {
     bless $self, "MTE::ML";
+  } elsif ($self->{MTCLASS} == MT_CLASS_SINGLE_MSG) {
+    bless $self, "MTE::SM";
   }
   return $self;
                 my $bapi = {
@@ -270,4 +272,28 @@ sub nagios_message {
   return $self->{MTNAMESHRT}." = ".$self->{MSG};
 }
 
+
+package MTE::SM;
+
+our @ISA = qw(MTE);
+
+sub collect_details {
+  my $self = shift;
+  my $session = shift;
+  $self->SUPER::collect_details($session);
+  my $fl = $session->function_lookup("BAPI_SYSTEM_MTE_GETSMVALUE");
+  my $fc = $fl->create_function_call;
+  $fc->TID($self->tid);
+  $fc->EXTERNAL_USER_NAME("CHECK_SAP_HEALTH");
+  $fc->invoke;
+  foreach (qw(MSG SMSGDATE SMSGDATE SMSGVALUE)) {
+    $self->{$_} = $self->strip($fc->VALUE->{$_});
+  }
+}
+
+sub nagios_message {
+  my $self = shift;
+  $self->{MSG} |= "<empty>";
+  return $self->{MTNAMESHRT}." = ".$self->{MSG};
+}
 

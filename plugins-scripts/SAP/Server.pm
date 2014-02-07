@@ -44,6 +44,9 @@ sub connect {
     my %params = (
       'lcheck' => '1',
     );
+    if ($self->opts->mode =~ /sapinfo/) { 
+      $params{lcheck} = 0;
+    }
     if ($self->opts->ashost) {
       $params{ashost} = $self->opts->ashost;
     }
@@ -68,9 +71,6 @@ sub connect {
     }
     $self->{tic} = Time::HiRes::time();
     my $session = undef;
-    if ($self->opts->mode =~ /sapinfo/) { 
-die;
-    }
     eval {
       $session = SAPNW::Rfc->rfc_connect(%params);
     };
