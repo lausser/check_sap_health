@@ -10,6 +10,8 @@ use constant WARNING    => 1;
 use constant CRITICAL   => 2;
 use constant UNKNOWN    => 3;
 
+use constant { GREEN => 1, YELLOW => 2, RED => 3, GRAY => 4 };
+
 # http://www.benx.de/en/sap/program/RSALBAPI---code.htm
 use constant MT_CLASS_NO_CLASS    => 0;
 use constant MT_CLASS_SUMMARY     => 50;
@@ -194,8 +196,9 @@ sub strip {
 
 
 package MTE::Performance;
-
+use strict;
 our @ISA = qw(MTE);
+use constant { GREEN => 1, YELLOW => 2, RED => 3, GRAY => 4 };
 
 sub collect_details {
   my $self = shift;
@@ -236,6 +239,23 @@ sub perfdata {
       $perfdata->{uom} = $unit;
     }
   }
+  if ($self->{THRESHDIR} == 1 || $self->{THRESHDIR} == 2) {
+    if ($self->{THRESHDIR} == 1) {
+      #$self->set_thresholds(
+      #    warning => $self->{TRESHG2Y},
+      #    critical => $self->{TRESHY2R},
+      #);
+      $perfdata->{warning} = $self->{TRESHG2Y};
+      $perfdata->{critical} = $self->{TRESHY2R};
+    } else {
+      #$self->set_thresholds(
+      #    warning => $self->{TRESHG2Y}.":",
+      #    critical => $self->{TRESHY2R}.":",
+      #);
+      $perfdata->{warning} = $self->{TRESHG2Y}.":";
+      $perfdata->{critical} = $self->{TRESHY2R}.":";
+    }
+  }
   return $perfdata;
   #warning
   #critical
@@ -247,6 +267,34 @@ sub nagios_message {
       $self->{OBJECTNAME}, $self->{MTNAMESHRT},
       $self->{ALRELEVVAL}, $self->{VALUNIT};
 }
+
+sub nagios_level {
+  my $self = shift;
+  if ($self->{ACTUAL_ALERT_DATA_VALUE} == 0) {
+    if ($self->{THRESHDIR} == 1 || $self->{THRESHDIR} == 2) {
+      # this mte is threshold driven
+      if ($self->{THRESHDIR} == 1) {
+        if ($self->{ALRELEVVAL} > $self->{TRESHY2R}) {
+          $self->{ACTUAL_ALERT_DATA_VALUE} = RED;
+        } elsif ($self->{ALRELEVVAL} > $self->{TRESHG2Y}) {
+          $self->{ACTUAL_ALERT_DATA_VALUE} = YELLOW;
+        } else {
+          $self->{ACTUAL_ALERT_DATA_VALUE} = GREEN;
+        }
+      } else {
+        if ($self->{ALRELEVVAL} < $self->{TRESHY2R}) {
+          $self->{ACTUAL_ALERT_DATA_VALUE} = RED;
+        } elsif ($self->{ALRELEVVAL} < $self->{TRESHG2Y}) {
+          $self->{ACTUAL_ALERT_DATA_VALUE} = YELLOW;
+        } else {
+          $self->{ACTUAL_ALERT_DATA_VALUE} = GREEN;
+        }
+      }
+    }
+  }
+  return MTE::sap2nagios($self->{ACTUAL_ALERT_DATA_VALUE});
+}
+
 
 
 package MTE::ML;

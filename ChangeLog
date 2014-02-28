@@ -1,3 +1,6 @@
+2014-02-28 1.1
+- fix threshold-driven perormance mtes
+
 2014-02-07 1.0.1
 - bugfix in mode sapinfo
 - single-message mtes
