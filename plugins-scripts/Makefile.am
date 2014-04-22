@@ -12,10 +12,10 @@ VPATH=$(top_srcdir) $(top_srcdir)/plugins-scripts $(top_srcdir)/plugins-scripts/
 libexec_SCRIPTS=check_sap_health
 MY_MODULES=
 EXTRA_MODULES=\
-  Nagios/MiniPlugin.pm \
+  GLPlugin.pm \
+  Classes/Device.pm \
   SAP/MTE.pm \
-  SAP/CCMS.pm \
-  SAP/Server.pm
+  SAP/CCMS.pm
 EXTRA_DIST=check_sap_health.pl $(EXTRA_MODULES)
 
 CLEANFILES=$(libexec_SCRIPTS)
