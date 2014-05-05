@@ -403,10 +403,15 @@ sub opts {
 
 sub DESTROY {
   my $self = shift;
+  my $plugin_exit = $?;
   if ($SAP::Server::session) {
     $SAP::Server::session->disconnect();
   }
   $self->debug("disconnected");
+  eval {
+    unlink "/tmp/dev_rfc.trc" if -f "/tmp/dev_rfc.trc";
+  };
+  $? = $plugin_exit;
 }
 
 
