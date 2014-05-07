@@ -147,6 +147,31 @@ $plugin->add_arg(
     required => 0,
 );
 $plugin->add_arg(
+    spec => 'warningx=s%',
+    help => '--warningx
+   The extended warning thresholds',
+    required => 0,
+);
+$plugin->add_arg(
+    spec => 'criticalx=s%',
+    help => '--criticalx
+   The extended critical thresholds',
+    required => 0,
+);
+$plugin->add_arg(
+    spec => 'mitigation=s',
+    help => "--mitigation
+   The parameter allows you to change a critical error to a warning.",
+    required => 0,
+);
+$plugin->add_arg(
+    spec => 'selectedperfdata=s',
+    help => "--selectedperfdata
+   The parameter allows you to limit the list of performance data. It's a perl regexp.
+   Only matching perfdata show up in the output",
+    required => 0,
+);
+$plugin->add_arg(
     spec => 'negate=s%',
     help => "--negate
    The parameter allows you to map exit levels, such as warning=critical",

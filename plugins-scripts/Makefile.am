@@ -14,8 +14,8 @@ MY_MODULES=
 EXTRA_MODULES=\
   GLPlugin.pm \
   Classes/Device.pm \
-  SAP/MTE.pm \
-  SAP/CCMS.pm
+  Classes/SAP.pm \
+  Classes/SAP/Component/CCMS.pm
 EXTRA_DIST=check_sap_health.pl $(EXTRA_MODULES)
 
 CLEANFILES=$(libexec_SCRIPTS)
