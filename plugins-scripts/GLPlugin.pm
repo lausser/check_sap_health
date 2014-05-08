@@ -1371,6 +1371,7 @@ sub getopts {
     exit 0;
   } else {
     no strict 'refs';
+    no warnings 'redefine';
     do { $self->print_help(); exit 0; } if $commandline{help};
     do { $self->print_version(); exit 0 } if $commandline{version};
     do { $self->print_usage(); exit 3 } if $commandline{usage};
@@ -1391,6 +1392,15 @@ sub getopts {
     }
     foreach (keys %commandline) {
       $self->{opts}->{$_} = $commandline{$_};
+    }
+    foreach (grep { exists $_->{aliasfor} } @{$self->{_args}}) {
+      my $field = $_->{aliasfor};
+      $_->{spec} =~ /^([\w\-]+)/;
+      my $aliasfield = $1;
+      next if $self->{opts}->{$field};
+      *{"$field"} = sub {
+        return $self->{opts}->{$aliasfield};
+      };
     }
   }
 }

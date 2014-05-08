@@ -123,6 +123,13 @@ $plugin->add_arg(
     required => 0,
 );
 $plugin->add_arg(
+    spec => 'drecksptkdb=s',
+    help => "--drecksptkdb
+   This parameter must be used instead of --name, because Devel::ptkdb is stealing the latter from the command line",
+    aliasfor => "name",
+    required => 0,
+);
+$plugin->add_arg(
     spec => 'name2=s',
     help => "--name2
    The secondary name of whatever",
