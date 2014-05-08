@@ -1,3 +1,6 @@
+2014-04-16 1.1.1
+- add cleanup of dev_rfc-Traces
+
 2014-02-28 1.1
 - fix threshold-driven perormance mtes
 
