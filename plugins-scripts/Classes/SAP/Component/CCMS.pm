@@ -1,29 +1,6 @@
 package Classes::SAP::Component::CCMS;
 our @ISA = qw(GLPlugin::Item);
-
 use strict;
-use constant OK         => 0;
-use constant WARNING    => 1;
-use constant CRITICAL   => 2;
-use constant UNKNOWN    => 3;
-
-use constant MT_CLASS_NO_CLASS    => 0;
-use constant MT_CLASS_SUMMARY     => 50;
-use constant MT_CLASS_MONIOBJECT  => 70;
-use constant MT_CLASS_FIRST_MA    => 99;
-use constant MT_CLASS_PERFORMANCE => 100;
-use constant MT_CLASS_MSG_CONT    => 101;
-use constant MT_CLASS_SINGLE_MSG  => 102;
-use constant MT_CLASS_HEARTBEAT   => 103;
-use constant MT_CLASS_LONGTEXT    => 110;
-use constant MT_CLASS_SHORTTEXT   => 111;
-use constant MT_CLASS_VIRTUAL     => 199;
-# skip 50, 70, 110, 111, 199
-
-use constant AL_VAL_INAKTIV => 0;
-use constant AL_VAL_GREEN => 1;
-use constant AL_VAL_YELLOW => 2;
-use constant AL_VAL_RED => 3;
 
 
 sub session {
@@ -65,7 +42,7 @@ sub init {
           foreach (@sets) {
             printf "%s\n", $_->{NAME};
           }
-          $self->add_message(OK, "have fun");
+          $self->add_ok("have fun");
 
         } elsif ($self->mode =~ /server::ccms::monitor::list/) {
           $fl = $self->session->function_lookup("BAPI_SYSTEM_MON_GETLIST");
@@ -86,7 +63,7 @@ sub init {
               printf " %s\n", $moni;
             }
           }
-          $self->add_message(OK, "have fun");
+          $self->add_ok("have fun");
         } elsif ($self->mode =~ /server::ccms::mte::/) {
           if (! $self->opts->name || ! $self->opts->name2) {
             die "__no_internals__you need to specify --name moniset --name2 monitor";
@@ -101,7 +78,7 @@ sub init {
           $fc->invoke;
           # TREE_NODES
           if ($fc->RETURN->{TYPE} =~ /^E/) {
-            $self->add_message(CRITICAL, $fc->RETURN->{MESSAGE});
+            $self->add_critical($fc->RETURN->{MESSAGE});
           } else {
             my @mtes = sort {
                 $a->{MTNAMELONG} cmp $b->{MTNAMELONG}
@@ -116,8 +93,7 @@ sub init {
               }
             } elsif ($self->mode =~ /server::ccms::mte::check/) {
               foreach my $mte (@mtes) {
-                next if ! grep $mte->{MTCLASS}, (100, 101);
-                #next if $mte->{ACTUAL_ALERT_DATA_VALUE} == 0;
+                next if grep { $mte->{MTCLASS} == $_ } (50, 70, 199);
                 $mte->collect_details($self->session);
                 if (keys %{$mte->perfdata()}) {
                   $self->add_perfdata(%{$mte->perfdata()});
@@ -125,7 +101,7 @@ sub init {
                 $self->add_message($mte->nagios_level(), $mte->nagios_message());
               }
               if (! @mtes) {
-                $self->add_message(UNKNOWN, "no mtes");
+                $self->add_unknown("no mtes");
               }
             }
           }
@@ -135,7 +111,7 @@ sub init {
         $fc->INTERFACE('XAL');
         $fc->invoke;
       } else {
-        $self->add_message(CRITICAL, $fc->RETURN->{MESSAGE});
+        $self->add_critical($fc->RETURN->{MESSAGE});
       }
     };
     if ($@) {
@@ -147,7 +123,7 @@ sub init {
         $message =~ s/at $0 line.*//g;
         $message =~ s/__no_internals__//g;
       }
-      $self->add_message(UNKNOWN, $message);
+      $self->add_unknown($message);
     }
   }
   my $bapi_tac = Time::HiRes::time();
@@ -167,12 +143,12 @@ sub map_alvalue {
   my $value = shift;
   if ($value && 1 <= $value && $value <= 3) {
     return {
-      1 => OK,
-      2 => WARNING,
-      3 => CRITICAL,
+      1 => 0,
+      2 => 1,
+      3 => 2,
     }->{$value};
   } else {
-    return UNKNOWN;
+    return 3;
   }
 }
 
@@ -180,11 +156,10 @@ sub map_alvalue {
 
 package MTE;
 our @ISA = qw(GLPlugin::TableItem);
+use strict;
 
 #our @ISA = qw(SAP::CCMS);
 # can't inherit, because this undefines the session handle. hurnmatz, greisliche
-
-use strict;
 
 use constant OK         => 0;
 use constant WARNING    => 1;
@@ -205,7 +180,12 @@ use constant MT_CLASS_HEARTBEAT   => 103;
 use constant MT_CLASS_LONGTEXT    => 110;
 use constant MT_CLASS_SHORTTEXT   => 111;
 use constant MT_CLASS_VIRTUAL     => 199;
+# skip 50, 70, 199
 
+use constant AL_VAL_INAKTIV => 0;
+use constant AL_VAL_GREEN => 1;
+use constant AL_VAL_YELLOW => 2;
+use constant AL_VAL_RED => 3;
 
 # Attribute Type
 #  Description
@@ -269,6 +249,9 @@ sub new {
     bless $self, "MTE::ML";
   } elsif ($self->{MTCLASS} == MT_CLASS_SINGLE_MSG) {
     bless $self, "MTE::SM";
+  } elsif ($self->{MTCLASS} == MT_CLASS_SHORTTEXT) {
+    bless $self, "MTE::ST";
+  } else {
   }
   return $self;
                 my $bapi = {
@@ -324,6 +307,8 @@ sub perfdata {
 
 sub nagios_level {
   my $self = shift;
+  $self->debug(sprintf "mte %s has alert %s",
+      $self->mkMTNAMELONG(), MTE::sap2nagios($self->{ACTUAL_ALERT_DATA_VALUE}));
   return MTE::sap2nagios($self->{ACTUAL_ALERT_DATA_VALUE});
 }
 
@@ -479,8 +464,8 @@ sub nagios_level {
 
 
 package MTE::ML;
-
 our @ISA = qw(MTE);
+use strict;
 
 sub collect_details {
   my $self = shift;
@@ -503,8 +488,8 @@ sub nagios_message {
 
 
 package MTE::SM;
-
 our @ISA = qw(MTE);
+use strict;
 
 sub collect_details {
   my $self = shift;
@@ -522,10 +507,61 @@ sub collect_details {
 
 sub nagios_message {
   my $self = shift;
-  $self->{MSG} |= "<empty>";
+  $self->{MSG} ||= "<empty>";
   return $self->{MTNAMESHRT}." = ".$self->{MSG};
 }
 
+
+package MTE::ST;
+our @ISA = qw(MTE);
+use strict;
+
+sub collect_details {
+  my $self = shift;
+  my $session = shift;
+  $self->SUPER::collect_details($session);
+  my $fl = $session->function_lookup("BAPI_SYSTEM_MTE_GETTXTPROP");
+  my $fc = $fl->create_function_call;
+  $fc->TID($self->tid);
+  $fc->EXTERNAL_USER_NAME("CHECK_SAP_HEALTH");
+  $fc->invoke;
+  foreach (qw(TEXT)) {
+    $self->{$_} = $self->strip($fc->PROPERTIES->{$_});
+  }
+}
+
+sub nagios_level {
+  my $self = shift;
+  $self->debug(sprintf "st mte %s has alert 0", $self->mkMTNAMELONG());
+  return 0;
+}
+
+sub nagios_message {
+  my $self = shift;
+  $self->{TEXT} ||= "<empty>";
+  return $self->{MTNAMESHRT}." = ".$self->{TEXT};
+}
+
+sub perfdata {
+  my $self = shift;
+  my $perfdata = {
+    label => $self->{OBJECTNAME}."_".$self->{MTNAMESHRT},
+  };
+  if ($self->{TEXT} =~ /([\d\.]+)\s*(s|%|[kmgt]{0,1}b|ms|msec)/) {
+    my $value = $1;
+    my $unit = $2;
+    $unit = "ms" if $unit eq "msec";
+    $perfdata->{value} = $value;
+    $perfdata->{uom} = $unit;
+  }
+  if (exists $perfdata->{value}) {
+    return $perfdata;
+  } else {
+    return {};
+  }
+  #warning
+  #critical
+}
 
 __END__
 CALL FUNCTION 'BAPI_SYSTEM_MTE_GETGENPROP' "Read General Properties of a Monitor Tree Element

@@ -108,8 +108,6 @@ sub init {
     $self->add_perfdata(
         label => 'connection_time',
         value => $self->{connection_time},
-        warning => $self->{warning},
-        critical => $self->{critical},
     );
     if ($self->mode =~ /^server::connectiontime::sapinfo/) {
       # extraoutput
@@ -121,11 +119,10 @@ sub init {
     my $class = $1;
     my $loaderror = undef;
     substr($class, 0, 1) = uc substr($class, 0, 1);
-    if (! $self->opts->get("with-my-modules-dyn-dir")) {
-      $self->override_opt("with-my-modules-dyn-dir", "");
+    if (! $self->opts->get("with-mymodules-dyn-dir")) {
+      $self->override_opt("with-mymodules-dyn-dir", "");
     }
-    #foreach my $libpath (split(":", $self->opts->get("with-my-modules-dyn-dir"))) {
-    foreach my $libpath (split(":", "/omd/sites/lidl_monitoring/etc/check_sap_health")) {
+    foreach my $libpath (split(":", $self->opts->get("with-mymodules-dyn-dir"))) {
       foreach my $extmod (glob $libpath."/CheckSapHealth*.pm") {
         eval {
           $self->debug(sprintf "loading module %s", $extmod);
@@ -171,4 +168,17 @@ sub validate_args {
   }
 }
 
+sub create_statefile {
+  my $self = shift;
+  my %params = @_;
+  my $extension = "";
+  $extension .= $params{name} ? '_'.$params{name} : '';
+  $extension =~ s/\//_/g;
+  $extension =~ s/\(/_/g;
+  $extension =~ s/\)/_/g;
+  $extension =~ s/\*/_/g;
+  $extension =~ s/\s/_/g;
+  return sprintf "%s/%s_%s_%s%s", $self->statefilesdir(),
+      $self->opts->ashost, $self->opts->sysnr, $self->opts->mode, lc $extension;
+}
 
