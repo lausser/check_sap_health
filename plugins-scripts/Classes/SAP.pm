@@ -182,3 +182,26 @@ sub create_statefile {
       $self->opts->ashost, $self->opts->sysnr, $self->opts->mode, lc $extension;
 }
 
+sub DESTROY {
+  my $self = shift;
+  my $plugin_exit = $?;
+  if ($Classes::SAP::session) {
+    $Classes::SAP::session->disconnect();
+  }
+  #$self->debug("disconnected");
+  my $now = time;
+  eval {
+    my $ramschdir = $ENV{RFC_TRACE_DIR} ? $ENV{RFC_TRACE_DIR} : "/tmp";
+    unlink $ramschdir."/dev_rfc.trc" if -f $ramschdir."/dev_rfc.trc";
+    no warnings "all";
+    foreach (glob $ramschdir."/rfc*.trc") {
+      eval {
+        if (($now - (stat $_)[9]) > 300) {
+          unlink $_;
+        }
+      };
+    }
+  };
+  $? = $plugin_exit;
+}
+
