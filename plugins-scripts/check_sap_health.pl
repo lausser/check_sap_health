@@ -105,6 +105,23 @@ $plugin->add_arg(
     required => 1,
 );
 $plugin->add_arg(
+    spec => 'report=s',
+    help => "--report
+   Can be used to shorten the output",
+    required => 0,
+    default => 'long',
+);
+$plugin->add_arg(
+    spec => 'lookback=s',
+    help => "--lookback
+   The amount of time you want to look back when calculating average rates.
+   Use it for mode interface-errors or interface-usage. Without --lookback
+   the time between two runs of check_nwc_health is the base for calculations.
+   If you want your checkresult to be based for example on the past hour,
+   use --lookback 3600. ",
+    required => 0,
+);
+$plugin->add_arg(
     spec => 'warning=s',
     help => '--warning
    The warning threshold',
@@ -116,6 +133,7 @@ $plugin->add_arg(
    The critical threshold',
     required => 0,
 );
+
 $plugin->add_arg(
     spec => 'name=s',
     help => "--name
