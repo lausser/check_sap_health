@@ -97,27 +97,35 @@ sub check_messages {
 
 sub clear_ok {
   my $self = shift;
-  return $self->clear_messages(OK);
+  $self->clear_messages(OK);
 }
 
 sub clear_warning {
   my $self = shift;
-  return $self->clear_messages(WARNING);
+  $self->clear_messages(WARNING);
 }
 
 sub clear_critical {
   my $self = shift;
-  return $self->clear_messages(CRITICAL);
+  $self->clear_messages(CRITICAL);
 }
 
 sub clear_unknown {
   my $self = shift;
-  return $self->clear_messages(UNKNOWN);
+  $self->clear_messages(UNKNOWN);
+}
+
+sub clear_all {
+  my $self = shift;
+  $self->clear_ok();
+  $self->clear_warning();
+  $self->clear_critical();
+  $self->clear_unknown();
 }
 
 sub clear_messages {
   my $self = shift;
-  return $GLPlugin::plugin->clear_messages(@_);
+  $GLPlugin::plugin->clear_messages(@_);
 }
 
 sub suppress_messages {
@@ -612,26 +620,13 @@ sub create_statefile {
   my %params = @_;
   my $extension = "";
   $extension .= $params{name} ? '_'.$params{name} : '';
-  if ($self->opts->can("community") && $self->opts->community) {
-    $extension .= md5_hex($self->opts->community);
-  }
   $extension =~ s/\//_/g;
   $extension =~ s/\(/_/g;
   $extension =~ s/\)/_/g;
   $extension =~ s/\*/_/g;
   $extension =~ s/\s/_/g;
-  if ($self->opts->can("snmpwalk") && $self->opts->snmpwalk && ! $self->opts->hostname) {
-    return sprintf "%s/%s_%s%s", $self->statefilesdir(),
-        'snmpwalk.file'.md5_hex($self->opts->snmpwalk),
-        $self->opts->mode, lc $extension;
-  } elsif ($self->opts->can("snmpwalk") && $self->opts->snmpwalk && $self->opts->hostname eq "walkhost") {
-    return sprintf "%s/%s_%s%s", $self->statefilesdir(),
-        'snmpwalk.file'.md5_hex($self->opts->snmpwalk),
-        $self->opts->mode, lc $extension;
-  } else {
-    return sprintf "%s/%s_%s%s", $self->statefilesdir(),
-        $self->opts->hostname, $self->opts->mode, lc $extension;
-  }
+  return sprintf "%s/%s%s", $self->statefilesdir(),
+      $self->opts->mode, lc $extension;
 }
 
 sub schimpf {
@@ -836,6 +831,79 @@ sub dump {
     }
   }
 }
+
+sub table_ascii {
+  my $self = shift;
+  my $table = shift;
+  my $titles = shift;
+  my $text = "";
+  my $column_length = {};
+  my $column = 0;
+  foreach (@{$titles}) {
+    $column_length->{$column++} = length($_);
+  }
+  foreach my $tr (@{$table}) {
+    @{$tr} = map { ref($_) eq "ARRAY" ? $_->[0] : $_; } @{$tr};
+    $column = 0;
+    foreach my $td (@{$tr}) {
+      if (length($td) > $column_length->{$column}) {
+        $column_length->{$column} = length($td);
+      }
+      $column++;
+    }
+  }
+  $column = 0;
+  foreach (@{$titles}) {
+    $column_length->{$column} = "%".($column_length->{$column} + 3)."s";
+    $column++;
+  }
+  $column = 0;
+  foreach (@{$titles}) {
+    $text .= sprintf $column_length->{$column++}, $_;
+  }
+  $text .= "\n";
+  foreach my $tr (@{$table}) {
+    $column = 0;
+    foreach my $td (@{$tr}) {
+      $text .= sprintf $column_length->{$column++}, $td;
+    }
+    $text .= "\n";
+  }
+  return $text;
+}
+
+sub table_html {
+  my $self = shift;
+  my $table = shift;
+  my $titles = shift;
+  my $text = "";
+  $text .= "<table style=\"border-collapse:collapse; border: 1px solid black;\">";
+  $text .= "<tr>";
+  foreach (@{$titles}) {
+    $text .= sprintf "<th style=\"text-align: left; padding-left: 4px; padding-right: 6px;\">%s</th>", $_;
+  }
+  $text .= "</tr>";
+  foreach my $tr (@{$table}) {
+    $text .= "<tr>";
+    foreach my $td (@{$tr}) {
+      my $class = "statusOK";
+      if (ref($td) eq "ARRAY") {
+        $class = {
+          0 => "statusOK",
+          1 => "statusWARNING",
+          2 => "statusCRITICAL",
+          3 => "statusUNKNOWN",
+        }->{$td->[1]};
+        $td = $td->[0];
+      }
+      $text .= sprintf "<td style=\"text-align: left; padding-left: 4px; padding-right: 6px;\" class=\"%s\">%s</td>", $class, $td;
+    }
+    $text .= "</tr>";
+  }
+  $text .= "</table>";
+  return $text;
+}
+
 
 sub AUTOLOAD {
   my $self = shift;
@@ -1151,16 +1219,20 @@ sub set_thresholds {
   my %params = @_;
   if (exists $params{metric}) {
     my $metric = $params{metric};
-    $self->{thresholds}->{$metric}->{warning} = 
-        $params{warning} if $params{warning};
-    $self->{thresholds}->{$metric}->{warning} = 
-        $self->{thresholds}->{$metric}->{warning} 
-        if $self->{thresholds}->{$metric}->{warning};
-    $self->{thresholds}->{$metric}->{critical} = 
-        $params{critical} if $params{critical};
-    $self->{thresholds}->{$metric}->{critical} = 
-        $self->{thresholds}->{$metric}->{critical}
-        if $self->{thresholds}->{$metric}->{critical};
+    $self->{thresholds}->{$metric}->{warning} = $params{warning};
+    $self->{thresholds}->{$metric}->{critical} = $params{critical};
+    if ($self->opts->warningx) {
+      foreach my $key (keys %{$self->opts->warningx}) {
+        next if $key ne $metric;
+        $self->{thresholds}->{$metric}->{warning} = $self->opts->warningx->{$key};
+      }
+    }
+    if ($self->opts->criticalx) {
+      foreach my $key (keys %{$self->opts->criticalx}) {
+        next if $key ne $metric;
+        $self->{thresholds}->{$metric}->{critical} = $self->opts->criticalx->{$key};
+      }
+    }
   } else {
     $self->{thresholds}->{default}->{warning} =
         $self->opts->warning || $params{warning} || 0;
@@ -1168,6 +1240,7 @@ sub set_thresholds {
         $self->opts->critical || $params{critical} || 0;
   }
 }
+
 
 sub force_thresholds {
   my $self = shift;

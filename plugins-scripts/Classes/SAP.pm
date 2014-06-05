@@ -115,6 +115,8 @@ sub init {
     }
   } elsif ($self->mode =~ /^server::ccms::/) {
     $self->analyze_and_check_ccms_subsystem("Classes::SAP::Component::CCMS");
+  } elsif ($self->mode =~ /^server::snap::/) {
+    $self->analyze_and_check_snap_subsystem("Classes::SAP::Component::SNAP");
   } elsif ($self->mode =~ /^my::([^:.]+)/) {
     my $class = $1;
     my $loaderror = undef;

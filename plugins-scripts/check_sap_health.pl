@@ -60,6 +60,30 @@ $plugin->add_mode(
     alias => undef,
     help => 'Check all MTEs (must be restricted to a monitor set / monitor with --name/--name2)',
 );
+$plugin->add_mode(
+    internal => 'server::snap::shortdumps::list',
+    spec => 'shortdumps-list',
+    alias => undef,
+    help => 'Read the SNAP table and list the short dumps',
+);
+$plugin->add_mode(
+    internal => 'server::snap::shortdumps::count',
+    spec => 'shortdumps-count',
+    alias => undef,
+    help => 'Read the SNAP table and count the short dumps (can be restricted with --name/--name2 = username/program)',
+);
+$plugin->add_mode(
+    internal => 'server::snap::shortdumps::recurrence',
+    spec => 'shortdumps-recurrence',
+    alias => undef,
+    help => 'Like shortdumps-count, but counts the recurrence of the same errors',
+);
+$plugin->add_mode(
+    internal => 'server::snap::list',
+    spec => 'shortdumps-list',
+    alias => undef,
+    help => 'Read the SNAP table and list the short dumps',
+);
 $plugin->add_arg(
     spec => 'ashost|H=s',
     help => '--ashost
