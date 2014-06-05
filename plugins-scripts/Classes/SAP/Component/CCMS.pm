@@ -92,13 +92,11 @@ sub init {
                 printf "%s %d\n", $mte->{MTNAMELONG}, $mte->{MTCLASS};
               }
             } elsif ($self->mode =~ /server::ccms::mte::check/) {
+              $self->set_thresholds();
               foreach my $mte (@mtes) {
                 next if grep { $mte->{MTCLASS} == $_ } (50, 70, 199);
                 $mte->collect_details($self->session);
-                if (keys %{$mte->perfdata()}) {
-                  $self->add_perfdata(%{$mte->perfdata()});
-                }
-                $self->add_message($mte->nagios_level(), $mte->nagios_message());
+                $mte->check();
               }
               if (! @mtes) {
                 $self->add_unknown("no mtes");
@@ -300,21 +298,12 @@ sub collect_details {
   $self->{ACTUAL_ALERT_DATA_LEVEL} = $fc->ACTUAL_ALERT_DATA->{LEVEL};
 }
 
-sub perfdata {
-  my $self = shift;
-  return {};
-}
-
-sub nagios_level {
+sub check {
   my $self = shift;
   $self->debug(sprintf "mte %s has alert %s",
       $self->mkMTNAMELONG(), MTE::sap2nagios($self->{ACTUAL_ALERT_DATA_VALUE}));
-  return MTE::sap2nagios($self->{ACTUAL_ALERT_DATA_VALUE});
-}
-
-sub nagios_message {
-  my $self = shift;
-  return "";
+  $self->add_info("");
+  $self->add_message(MTE::sap2nagios($self->{ACTUAL_ALERT_DATA_VALUE}));
 }
 
 sub tid {
@@ -392,7 +381,7 @@ sub collect_details {
 
 }
 
-sub perfdata {
+sub check {
   my $self = shift;
   my $perfdata = {
     label => $self->{OBJECTNAME}."_".$self->{MTNAMESHRT},
@@ -407,34 +396,25 @@ sub perfdata {
   }
   if ($self->{THRESHDIR} == 1 || $self->{THRESHDIR} == 2) {
     if ($self->{THRESHDIR} == 1) {
-      #$self->set_thresholds(
-      #    warning => $self->{TRESHG2Y},
-      #    critical => $self->{TRESHY2R},
-      #);
       $perfdata->{warning} = $self->{TRESHG2Y};
       $perfdata->{critical} = $self->{TRESHY2R};
     } else {
-      #$self->set_thresholds(
-      #    warning => $self->{TRESHG2Y}.":",
-      #    critical => $self->{TRESHY2R}.":",
-      #);
       $perfdata->{warning} = $self->{TRESHG2Y}.":";
       $perfdata->{critical} = $self->{TRESHY2R}.":";
     }
   }
-  return $perfdata;
-  #warning
-  #critical
+  $self->set_thresholds(warning => $perfdata->{warning}, critical => $perfdata->{critical}, metric => $perfdata->{label});
+  delete $perfdata->{warning};
+  delete $perfdata->{critical};
+  $self->add_perfdata(%{$perfdata});
+  $self->add_message(
+      $self->check_thresholds(
+          value => $self->{ALRELEVVAL}, metric => $self->{OBJECTNAME}."_".$self->{MTNAMESHRT}),
+      sprintf "%s %s = %s%s", $self->{OBJECTNAME}, $self->{MTNAMESHRT}, $self->{ALRELEVVAL}, $self->{VALUNIT}
+  );
 }
 
-sub nagios_message {
-  my $self = shift;
-  return return sprintf "%s %s = %s%s",
-      $self->{OBJECTNAME}, $self->{MTNAMESHRT},
-      $self->{ALRELEVVAL}, $self->{VALUNIT};
-}
-
-sub nagios_level {
+sub nagios_level { #deprecated
   my $self = shift;
   if ($self->{ACTUAL_ALERT_DATA_VALUE} == 0) {
     if ($self->{THRESHDIR} == 1 || $self->{THRESHDIR} == 2) {
@@ -481,9 +461,12 @@ sub collect_details {
   }
 }
 
-sub nagios_message {
+sub check {
   my $self = shift;
-  return $self->{MTNAMESHRT}." = ".$self->{MSG};
+  $self->debug(sprintf "mte %s has alert %s",
+      $self->mkMTNAMELONG(), MTE::sap2nagios($self->{ACTUAL_ALERT_DATA_VALUE}));
+  $self->add_info($self->{MTNAMESHRT}." = ".$self->{MSG});
+  $self->add_message(MTE::sap2nagios($self->{ACTUAL_ALERT_DATA_VALUE}));
 }
 
 
@@ -505,10 +488,13 @@ sub collect_details {
   }
 }
 
-sub nagios_message {
+sub check {
   my $self = shift;
+  $self->debug(sprintf "mte %s has alert %s",
+      $self->mkMTNAMELONG(), MTE::sap2nagios($self->{ACTUAL_ALERT_DATA_VALUE}));
   $self->{MSG} ||= "<empty>";
-  return $self->{MTNAMESHRT}." = ".$self->{MSG};
+  $self->add_info($self->{MTNAMESHRT}." = ".$self->{MSG});
+  $self->add_message(MTE::sap2nagios($self->{ACTUAL_ALERT_DATA_VALUE}));
 }
 
 
@@ -530,37 +516,22 @@ sub collect_details {
   }
 }
 
-sub nagios_level {
+sub check {
   my $self = shift;
-  $self->debug(sprintf "st mte %s has alert 0", $self->mkMTNAMELONG());
-  return 0;
-}
-
-sub nagios_message {
-  my $self = shift;
+  $self->debug(sprintf "mte %s has alert 0",
+      $self->mkMTNAMELONG());
   $self->{TEXT} ||= "<empty>";
-  return $self->{MTNAMESHRT}." = ".$self->{TEXT};
-}
-
-sub perfdata {
-  my $self = shift;
-  my $perfdata = {
-    label => $self->{OBJECTNAME}."_".$self->{MTNAMESHRT},
-  };
+  $self->add_info($self->{MTNAMESHRT}." = ".$self->{TEXT});
+  $self->add_ok();
   if ($self->{TEXT} =~ /([\d\.]+)\s*(s|%|[kmgt]{0,1}b|ms|msec)/) {
     my $value = $1;
     my $unit = $2;
-    $unit = "ms" if $unit eq "msec";
-    $perfdata->{value} = $value;
-    $perfdata->{uom} = $unit;
+    $self->add_perfdata(
+        label => $self->{OBJECTNAME}."_".$self->{MTNAMESHRT},
+        value => $1,
+        uom => $2 eq "msec" ? "ms" : $2,
+    );
   }
-  if (exists $perfdata->{value}) {
-    return $perfdata;
-  } else {
-    return {};
-  }
-  #warning
-  #critical
 }
 
 __END__

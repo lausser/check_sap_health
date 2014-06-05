@@ -166,6 +166,7 @@ sub init {
 sub validate_args {
   my $self = shift;
   $self->SUPER::validate_args();
+  $MTE::separator = $self->opts->separator if $self->opts->separator;
   if ($self->opts->get("with-my-modules-dyn-dir")) {
   }
 }

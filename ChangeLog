@@ -1,6 +1,7 @@
 2014-06-05 1.2
 - add modes shortdumps-list, shortdumps-count, shortdumps-recurrence
 - add report html
+- add warningx/criticalx for mtes
 
 2014-04-16 1.1.1
 - add cleanup of dev_rfc-Traces
