@@ -103,11 +103,11 @@ sub init {
                 $unique_dumps->{$signature}->{count}++;
               }
             }
+            $self->set_thresholds(warning => 50, critical => 100, metric => 'max_unique_shortdumps');
             foreach my $unique_dump (map { $unique_dumps->{$_} } keys %{$unique_dumps}) {
               $max_unique_shortdumps = $unique_dump->{count} if ($unique_dump->{count} > $max_unique_shortdumps);
               $max_unique_overflows++ if $self->check_thresholds(value => $unique_dump->{count}, metric => 'max_unique_shortdumps');
             }
-            $self->set_thresholds(warning => 50, critical => 100, metric => 'max_unique_shortdumps');
             $self->add_info(sprintf "the most frequent error appeared %d times", $max_unique_shortdumps);
             $self->add_message($self->check_thresholds(value => $max_unique_shortdumps, metric => 'max_unique_shortdumps'));
             $self->add_perfdata(
