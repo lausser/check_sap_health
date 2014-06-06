@@ -117,49 +117,6 @@ sub init {
     $self->analyze_and_check_ccms_subsystem("Classes::SAP::Component::CCMS");
   } elsif ($self->mode =~ /^server::snap::/) {
     $self->analyze_and_check_snap_subsystem("Classes::SAP::Component::SNAP");
-  } elsif ($self->mode =~ /^my::([^:.]+)/) {
-    my $class = $1;
-    my $loaderror = undef;
-    substr($class, 0, 1) = uc substr($class, 0, 1);
-    if (! $self->opts->get("with-mymodules-dyn-dir")) {
-      $self->override_opt("with-mymodules-dyn-dir", "");
-    }
-    foreach my $libpath (split(":", $self->opts->get("with-mymodules-dyn-dir"))) {
-      foreach my $extmod (glob $libpath."/CheckSapHealth*.pm") {
-        eval {
-          $self->debug(sprintf "loading module %s", $extmod);
-          require $extmod;
-        };
-        if ($@) {
-          $loaderror = $extmod;
-          $self->debug(sprintf "failed loading module %s: %s", $extmod, $@);
-        }
-      }
-    }
-    my $obj = {
-        session => $self->session,
-        warning => $self->opts->warning,
-        critical => $self->opts->critical,
-    };
-    bless $obj, "My$class";
-    $self->{my} = $obj;
-    if ($self->{my}->isa("Classes::SAP")) {
-      my $dos_init = $self->can("init");
-      my $dos_nagios = $self->can("nagios");
-      my $my_init = $self->{my}->can("init");
-      my $my_nagios = $self->{my}->can("nagios");
-      if ($my_init == $dos_init) {
-          $self->add_message(UNKNOWN,
-              sprintf "Class %s needs an init() method", ref($self->{my}));
-      } else {
-        $self->{my}->init();
-      }
-    } else {
-      $self->add_message(UNKNOWN,
-          sprintf "Class %s is not a subclass of Classes::SAP%s",
-              ref($self->{my}),
-              $loaderror ? sprintf " (syntax error in %s?)", $loaderror : "" );
-    }
   }
 }
 

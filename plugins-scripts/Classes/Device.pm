@@ -12,5 +12,8 @@ sub classify {
     $self->debug('using Classes::SAP');
     $self->check_rfc_and_model();
   }
+  if ($self->opts->mode =~ /^my-/) {
+    $self->load_my_extension();
+  }
 }
 
