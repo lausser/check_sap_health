@@ -79,6 +79,12 @@ $plugin->add_mode(
     help => 'Like shortdumps-count, but counts the recurrence of the same errors',
 );
 $plugin->add_mode(
+    internal => 'server::updates::failed',
+    spec => 'failed-updates',
+    alias => undef,
+    help => 'Counts new entries in the VHDR table (since last run or appeared in the interval specified by --lookback)',
+);
+$plugin->add_mode(
     internal => 'server::snap::list',
     spec => 'shortdumps-list',
     alias => undef,

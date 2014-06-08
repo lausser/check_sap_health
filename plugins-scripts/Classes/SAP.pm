@@ -117,6 +117,8 @@ sub init {
     $self->analyze_and_check_ccms_subsystem("Classes::SAP::Component::CCMS");
   } elsif ($self->mode =~ /^server::snap::/) {
     $self->analyze_and_check_snap_subsystem("Classes::SAP::Component::SNAP");
+  } elsif ($self->mode =~ /^server::updates::/) {
+    $self->analyze_and_check_snap_subsystem("Classes::SAP::Component::UpdateSubsystem");
   }
 }
 
