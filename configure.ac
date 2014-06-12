@@ -1,7 +1,11 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_REVISION ($Revision: 1.150 $)
 AC_PREREQ(2.58)
+<<<<<<< HEAD
 AC_INIT(check_sap_health,1.3)
+=======
+AC_INIT(check_sap_health,1.2.1)
+>>>>>>> 4299da55ac99e75eb6b62372bff1bc0bbd0029f7
 AM_INIT_AUTOMAKE([tar-pax])
 AC_CANONICAL_HOST
 

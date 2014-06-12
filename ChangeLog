@@ -3,6 +3,7 @@
   This means: throw away your rrd-files. The metrics you collected are mostly wrong. 
   You should also throw away your old sap-plugins and use check_sap_health :-)
   Many thanks to Silvan Hunkirchen who provided me with the virtual clue.
+- add mode failed-updates
 
 2014-06-05 1.2
 - add modes shortdumps-list, shortdumps-count, shortdumps-recurrence
