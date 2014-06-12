@@ -378,7 +378,14 @@ sub collect_details {
       TRESHR2Y THRESHDIR TRESHG2Y TRESHY2G THRESHSTAT MSGCLASS TRESHY2R)) {
     $self->{$_} = $self->strip($fc->PROPERTIES->{$_});
   }
-
+  if ($self->{DECIMALS} != 0) {
+    # aus SAP_BASIS Modul BC-CCM-MON-OS
+    my $exp = 10 ** $self->{DECIMALS};
+    $self->{ALRELEVVAL} /= $exp;
+    foreach (qw(TRESHR2Y TRESHG2Y TRESHY2G TRESHY2R)) {
+      $self->{$_} /= $exp if $self->{$_};
+    }
+  }
 }
 
 sub check {
