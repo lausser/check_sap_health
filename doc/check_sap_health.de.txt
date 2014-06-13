@@ -1,0 +1,77 @@
+
+check_sap_health - Ein Plugin zur Überwachung von SAP Netweaver
+===============================================================
+
+Beschreibung
+------------
+Das Plugin check_sap_health wurde mit dem Ziel entwickelt, ein leicht erweiterbares Werkzeug zu haben, mit dem sich sowohl technische Parameter aus dem CCMS als auch betriebswirtschaftliche Fakten per RFC/BAPI überwachen lassen.
+
+Motivation
+----------
+Anstatt eine Vielzahl von Plugins für das Monitoring von Interfaces, Hardware, Slots etc. zu installieren und das für jedes Fabrikat, soll mit check_sap_health nur noch ein einziges Plugin ausreichen.
+
+
+Dokumentation
+-------------
+
+Kommandozeilenparameter
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Modi
+~~~~
+[role="nagiosplugins", options="header", cols=6, width="50%"]
+|==========================================
+|.		|.		|hardware-health|cpu-load|memory-usage|interface-usage
+|HP		|StorEver 1x8	|X|.	|.	|X
+|Quantum	|i40, i80	|X|.	|.	|X
+|==========================================
+
+
+
+Installation
+------------
+
+
+Beispiele
+---------
+
+
+Download
+--------
+http://labs.consol.de/download/shinken-nagios-plugins/check_sap_health-1.1.tar.gz[check_sap_health-1.1.tar.gz]
+
+
+
+Externe Links
+-------------
+
+
+Changelog
+---------
+
+* 2013-10-07 1.1
++
+added Quantum small tape library i40 and i80
+
+* 2013-10-01 1.01
++
+Minor cosmetics. Production monitoring of HP StoreEver MSL4048 starts
+
+* 2013-09-26 1.00
++
+Thanks to a loyal customer the development starts.
+
+
+Copyright
+---------
+Gerhard Laußer
+
+Check_tl_health wird unter der GNU General Public License zur Verfügung gestellt.
+http://www.gnu.de/documents/gpl.de.html[GPL]
+
+
+
+Autor
+-----
+Gerhard Laußer (mailto:gerhard.lausser@consol.de[gerhard.lausser@consol.de]) beantwortet gerne Fragen zu diesem Plugin. Er ignoriert aber Fragen wie "Wann implementieren sie Library XY?", "Wann haben sie mal Zeit, meine Probleme zu lösen?", "Hatten sie schon Zeit, meine Probleme zu lösen?", "Wann gibt's die nächste Version?", "Blablablubb funktioniert nicht, können sie dieses Problem lösen?", "Hilfääää, mein Chef möchte, dass ich unseren Dong-Sing-Hao-Tapeloader von Ebay ins Icinga einbinde, kannst du das für mich machen?"
+
