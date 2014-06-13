@@ -8,7 +8,7 @@ Das Plugin check_sap_health wurde mit dem Ziel entwickelt, ein leicht erweiterba
 
 Motivation
 ----------
-Anstatt eine Vielzahl von Plugins für das Monitoring von Interfaces, Hardware, Slots etc. zu installieren und das für jedes Fabrikat, soll mit check_sap_health nur noch ein einziges Plugin ausreichen.
+Die bisher verfügbaren Plugins sind in C geschrieben, wodurch man nicht mal eben ein neues Feature einbauen und ausprobieren kann. Des weiteren beschränken sich die Möglichkeiten dieser Plugins auf die Abfrage von CCMS-Metriken. Als es Mitte 2013 beim bis dahin eingesetzten check_sap zu Core-Dumps kam (irreparabel, da nach dem exit()-Aufruf) und offenbar die Kompatibilität zu neueren Netweaver-Versionen nicht mehr gewährleistet war, suchte ich nach Alternativen. Zeitgleich gab es die Anforderung RFC- und BAPI-Aufrufe in das Monitoring aufzunehmen. Diese Aufrufe bezogen sich hauptsächlich auf firmenspezifische Erweiterungen und sollten im Endausbau die Überwachung alles SAP-basierten Versicherungs- und Banken-Geschäftsprozesse abdecken. Mit einem starr kompilierten Plugin ist so etwas nicht möglich, jedenfalls nicht wenn man das Ergebnis als Open Source veröffentlichen will. Daher wurde mit check_sap_health ein neues Plugin auf Perl-Basis entwickelt. Es bietet die von den anderen check_*_health bekannte Erweiterbarkeit durch kleine selbstgeschriebene Perl-Schnippsel. Auf diese Weise kann das Plugin mit seinen Basisfunktionen veröffentlicht werden und gleichzeitig an spezielle Anforderungen eines Unternehmens angepasst werden.
 
 
 Dokumentation
@@ -17,14 +17,45 @@ Dokumentation
 Kommandozeilenparameter
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+
+* *--ashost <hostname>* Der Hostname bzw. die IP-Adresse des Application-Servers
+* *--sysnr <nr>* Die System Number
+* *--username <username>* Der Monitoring-User
+* *--password <password>* Dessen Passwort
+* *--client <nr>* Die Mandantennummer, Defaulteinstellung ist 001.
+* *--lang <lang>* Die Sprache, Defaulteinstellung ist EN.
+* *--mode <modus>* Mit dem mode-Parameter teilt man dem Plugin mit, was es tun soll. Siehe Liste der möglichen Werte weiter unten.
+* *--name <objektname>* Hier kann die Prüfung auf ein einziges Objekt oder einen Oberbegriff begrenzt werden. (Siehe Beispiele, da die Bedeutung vom verwendeten Modus abhängt)
+* *--name2 <objektname>* Dito, zur genaueren Eingrenzung.
+* *--name3 <objektname>* Dito, zur genaueren Eingrenzung.
+* *--regexp* Ein Flag welches angibt, ob --name[2,3] als regulärer Ausdruck zu interpretieren ist.
+* *--lookback <sekunden>* Mit diesem Parameter kann man angeben, wie weit in die Vergangenheit geblickt werden soll (um z.B. die Anzahl best. Ereignisse zu zählen)
+* *--report <short|long|html>* Bei manchen Modi wird mehr als eine Zeile ausgegeben. Mit der html-Option erscheint dann ein farbiges Popup in der Thruk-GUI.
+* *--separator <zeichen>* MTE-Namen in ihrer Langform werden wie ein Pfad angegeben, wobei der Backslash defaultmäßig das Trennzeichen ist. Mit --separator kann hierfür ein anderes Zeichen angegeben werden, z.B. '#'.
+* *--criticalx <label=schwellwert>* Mit diesem Parameter lassen sich die von SAP gelieferten Schwellwerte (bei Performance-MTEs) überschreiben.
+* *--warningx <label=schwellwert>* Dito.
+* *--negate <level=level>* Anstelle des Wrapper-Plugins negate kann dieser Parameter den Exitcode modifizieren. (--negate unknown=critical)
+* *--with-mymodules-dyn-dir <verzeichnis>* In diesem Verzeichnis wird nach selbstgeschriebenen Erweiterungen (Dateiname CheckSapHealth*.pm) gesucht.
+
+
 Modi
 ~~~~
-[role="nagiosplugins", options="header", cols=6, width="50%"]
-|==========================================
-|.		|.		|hardware-health|cpu-load|memory-usage|interface-usage
-|HP		|StorEver 1x8	|X|.	|.	|X
-|Quantum	|i40, i80	|X|.	|.	|X
-|==========================================
+[role="nagiosplugins", options="header", cols="3*<", width="574"]
+|====
+|*Schlüsselwort* |*Bedeutung* |*Wertebereich*
+|connection-time|Misst, wie lange Verbindungsaufbau und Login dauern|0..n Sekunden (1, 5)
+|list-ccms-monitor-sets|Zeigt die im CCMS vorhandenen Monitor-Sets an.|
+|list-ccms-monitors|Zeigt die in einem Monitor-Set vorhandenen Monitore an. (--name bestimmt das Monitor-Set).|
+|list-ccms-mtes|Zeigt die in einem Monitor vorhandenen MTEs an. (--name bestimmt das Monitor-Set, --name2 den Monitor).|
+|ccms-mte-check|Überprüft die in einem Monitor vorhandenen MTEs. Mit --name3 und ggf. --regexp kann eine Teilmenge ausgewählt werden.|
+|shortdumps-list|Gibt alle in der SNAP-Tabelle gefundenen Short Dumps aus.|
+|shortdumps-count|Zählt die Short Dumps. Mit --name kann nach Username, mit --name2 nach Programm gefiltert werden.|
+|shortdumps-recurrence|Zählt die Short Dumps, wobei diesmal das Aufkommen der einzelnen Events angezeigt wird.|
+|failed-updates|Zählt die Einträge in der VHDR-Tabelle, die seit dem letzten Lauf des Plugins hinzugekommen sind (oder seit einem mit --lookback bestimmten Zeitpunkt in der Vergangenheit). Damit überwacht man Updates, die es aus welchem Grund auch immer nicht in die Datenbank geschafft haben.|
+|====
+
+
+
 
 
 
@@ -38,7 +69,7 @@ Beispiele
 
 Download
 --------
-http://labs.consol.de/download/shinken-nagios-plugins/check_sap_health-1.1.tar.gz[check_sap_health-1.1.tar.gz]
+http://labs.consol.de/download/shinken-nagios-plugins/check_sap_health-1.3.1.tar.gz[check_sap_health-1.3.1.tar.gz]
 
 
 
@@ -49,29 +80,50 @@ Externe Links
 Changelog
 ---------
 
-* 2013-10-07 1.1
+* 2014-06-13 1.3.1
 +
-added Quantum small tape library i40 and i80
+bugfix in failed-updates
+remove duplicate mtes in BAPI_SYSTEM_MON_GETTREE
 
-* 2013-10-01 1.01
+* 2014-06-12 1.3
 +
-Minor cosmetics. Production monitoring of HP StoreEver MSL4048 starts
+bugfix in MT_CLASS_PERFORMANCE ALRELEVVAL and Thresholds.
+This means: throw away your rrd-files. The metrics you collected are mostly wrong.
+You should also throw away your old sap-plugins and use check_sap_health :-)
+Many thanks to Silvan Hunkirchen who provided me with the virtual clue.
+add mode failed-updates
 
-* 2013-09-26 1.00
+* 2014-06-05 1.2
 +
-Thanks to a loyal customer the development starts.
+add modes shortdumps-list, shortdumps-count, shortdumps-recurrence
+add report html
+add warningx/criticalx for mtes
+
+* 2014-04-16 1.1.1
++
+add cleanup of dev_rfc-Traces
+
+* 2014-02-28 1.1
++
+fix threshold-driven perormance mtes
+
+* 2014-02-07 1.0.1
++
+bugfix in mode sapinfo
+single-message mtes
 
 
 Copyright
 ---------
 Gerhard Laußer
 
-Check_tl_health wird unter der GNU General Public License zur Verfügung gestellt.
+Check_sap_health wird unter der GNU General Public License zur Verfügung gestellt.
 http://www.gnu.de/documents/gpl.de.html[GPL]
 
 
 
 Autor
 -----
-Gerhard Laußer (mailto:gerhard.lausser@consol.de[gerhard.lausser@consol.de]) beantwortet gerne Fragen zu diesem Plugin. Er ignoriert aber Fragen wie "Wann implementieren sie Library XY?", "Wann haben sie mal Zeit, meine Probleme zu lösen?", "Hatten sie schon Zeit, meine Probleme zu lösen?", "Wann gibt's die nächste Version?", "Blablablubb funktioniert nicht, können sie dieses Problem lösen?", "Hilfääää, mein Chef möchte, dass ich unseren Dong-Sing-Hao-Tapeloader von Ebay ins Icinga einbinde, kannst du das für mich machen?"
+Gerhard Laußer (mailto:gerhard.lausser@consol.de[gerhard.lausser@consol.de]) beantwortet gerne Fragen zu diesem Plugin. 
+Nein, das ist gelogen. Er verkauft gern Consulting.
 
