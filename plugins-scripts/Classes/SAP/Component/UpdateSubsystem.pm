@@ -46,7 +46,7 @@ sub init {
       my $failed_updates = scalar(@rows);
       $self->set_thresholds(warning => 10, critical => 20);
       if ($failed_updates == 0) {
-        $self->add_info("no broken posts in system");
+        $self->add_info("no failed updates in system");
       } else {
         $self->add_info(
             sprintf "%d new failed update records appeared between %s %s and %s %s", 

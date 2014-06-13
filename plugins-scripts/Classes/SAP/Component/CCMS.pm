@@ -80,10 +80,13 @@ sub init {
           if ($fc->RETURN->{TYPE} =~ /^E/) {
             $self->add_critical($fc->RETURN->{MESSAGE});
           } else {
+            my %seen;
             my @mtes = sort {
                 $a->{MTNAMELONG} cmp $b->{MTNAMELONG}
             } grep {
               $self->filter_name3($_->{MTNAMELONG})
+            } grep {
+              ! $seen{$_->tid_flat()}++;
             } map { 
                 MTE->new(%{$_});
             } @{$fc->TREE_NODES};
@@ -320,6 +323,18 @@ sub tid {
     };
   }
   return $self->{tid};
+}
+
+sub tid_flat {
+  my $self = shift;
+  return sprintf "%s_%s_%s_%s_%s_%s_%s_",
+      $_->{MTSYSID},
+      $_->{MTMCNAME},
+      $_->{MTNUMRANGE},
+      $_->{MTUID},
+      $_->{MTCLASS},
+      $_->{MTINDEX},
+      $_->{EXTINDEX};
 }
 
 sub extra_props {
