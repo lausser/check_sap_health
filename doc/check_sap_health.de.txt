@@ -40,14 +40,14 @@ Kommandozeilenparameter
 
 Modi
 ~~~~
-[role="nagiosplugins", options="header", cols="3*<", width="574"]
+[role="nagiosplugins", options="header", cols="1,3,1", width="100%"]
 |====
-|*Schlüsselwort* |*Bedeutung* |*Wertebereich*
-|connection-time|Misst, wie lange Verbindungsaufbau und Login dauern|0..n Sekunden (1, 5)
+|*Schlüsselwort* |*Bedeutung* |*Schwellwerte*
+|connection-time|Misst, wie lange Verbindungsaufbau und Login dauern|0..n Sekunden (Default: 1, 5)
 |list-ccms-monitor-sets|Zeigt die im CCMS vorhandenen Monitor-Sets an.|
 |list-ccms-monitors|Zeigt die in einem Monitor-Set vorhandenen Monitore an. (--name bestimmt das Monitor-Set).|
 |list-ccms-mtes|Zeigt die in einem Monitor vorhandenen MTEs an. (--name bestimmt das Monitor-Set, --name2 den Monitor).|
-|ccms-mte-check|Überprüft die in einem Monitor vorhandenen MTEs. Mit --name3 und ggf. --regexp kann eine Teilmenge ausgewählt werden.|
+|ccms-mte-check|Überprüft die in einem Monitor vorhandenen MTEs. Mit --name3 und ggf. --regexp kann eine Teilmenge ausgewählt werden.|(Default: vom CCMS vorgegeben)
 |shortdumps-list|Gibt alle in der SNAP-Tabelle gefundenen Short Dumps aus.|
 |shortdumps-count|Zählt die Short Dumps. Mit --name kann nach Username, mit --name2 nach Programm gefiltert werden.|
 |shortdumps-recurrence|Zählt die Short Dumps, wobei diesmal das Aufkommen der einzelnen Events angezeigt wird.|
