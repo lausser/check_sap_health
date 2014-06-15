@@ -8,7 +8,8 @@ Das Plugin check_sap_health wurde mit dem Ziel entwickelt, ein leicht erweiterba
 
 Motivation
 ----------
-Die bisher verfügbaren Plugins sind in C geschrieben, wodurch man nicht mal eben ein neues Feature einbauen und ausprobieren kann. Des weiteren beschränken sich die Möglichkeiten dieser Plugins auf die Abfrage von CCMS-Metriken. Als es Mitte 2013 beim bis dahin eingesetzten check_sap zu Core-Dumps kam (irreparabel, da nach dem exit()-Aufruf) und offenbar die Kompatibilität zu neueren Netweaver-Versionen nicht mehr gewährleistet war, suchte ich nach Alternativen. Zeitgleich gab es die Anforderung RFC- und BAPI-Aufrufe in das Monitoring aufzunehmen. Diese Aufrufe bezogen sich hauptsächlich auf firmenspezifische Erweiterungen und sollten im Endausbau die Überwachung alles SAP-basierten Versicherungs- und Banken-Geschäftsprozesse abdecken. Mit einem starr kompilierten Plugin ist so etwas nicht möglich, jedenfalls nicht wenn man das Ergebnis als Open Source veröffentlichen will. Daher wurde mit check_sap_health ein neues Plugin auf Perl-Basis entwickelt. Es bietet die von den anderen check_*_health bekannte Erweiterbarkeit durch kleine selbstgeschriebene Perl-Schnippsel. Auf diese Weise kann das Plugin mit seinen Basisfunktionen veröffentlicht werden und gleichzeitig an spezielle Anforderungen eines Unternehmens angepasst werden.
+Die bisher verfügbaren Plugins sind in C geschrieben, wodurch man nicht mal eben ein neues Feature einbauen und ausprobieren kann. Des weiteren beschränken sich die Möglichkeiten dieser Plugins auf die Abfrage von CCMS-Metriken. Als es Mitte 2013 beim bis dahin eingesetzten check_sap zu Core-Dumps kam (irreparabel, da nach dem exit()-Aufruf) und offenbar die Kompatibilität zu neueren Netweaver-Versionen nicht mehr gewährleistet war, suchte ich nach Alternativen. Zeitgleich gab es die Anforderung RFC- und BAPI-Aufrufe in das Monitoring aufzunehmen. Diese Aufrufe bezogen sich hauptsächlich auf firmenspezifische Erweiterungen und sollten im Endausbau die Überwachung alles SAP-basierten Versicherungs- und Banken-Geschäftsprozesse abdecken. 
+ Mit einem starr kompilierten Plugin ist so etwas nicht möglich, jedenfalls nicht wenn man das Ergebnis als Open Source veröffentlichen will. Daher wurde mit check_sap_health ein neues Plugin auf Perl-Basis entwickelt. Es bietet die von den anderen check_*_health bekannte Erweiterbarkeit durch kleine selbstgeschriebene Perl-Schnippsel. Auf diese Weise kann das Plugin mit seinen Basisfunktionen veröffentlicht werden und gleichzeitig an spezielle Anforderungen eines Unternehmens angepasst werden.
 
 
 Dokumentation
@@ -40,7 +41,7 @@ Kommandozeilenparameter
 
 Modi
 ~~~~
-[role="nagiosplugins", options="header", cols="1,3,1", width="100%"]
+[role="nagiosplugins", options="header,autowidth", style="asciidoc", cols="1,3,1", width="100%"]
 |====
 |*Schlüsselwort* |*Bedeutung* |*Schwellwerte*
 |connection-time|Misst, wie lange Verbindungsaufbau und Login dauern|0..n Sekunden (Default: 1, 5)
