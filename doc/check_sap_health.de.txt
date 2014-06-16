@@ -162,6 +162,36 @@ ASCII_NOTIFICATION_END
 
 ----
 
+Bildchen
+--------
+
+Die Option --report html ergänzt die Plugin-Ausgabe um HTML-Code, der nähere Informationen in Tabellenform liefert und die kritischen Teile farblich markiert.
+[role="nagiosplugins", cols="asciidoc,asciidoc"]
+|==================================
+|
+++++
+<p><a href="$check_sap_health_shortdumps-recurrence-1[2].png"><img title="check_sap_health_shortdumps-recurrence-1" style="border-top: 0px; border-right: 0px; background-image: none; border-bottom: 0px; padding-top: 0px; padding-left: 0px; margin: 3px 20px 7px; border-left: 0px; display: inline; padding-right: 0px" border="0" alt="check_sap_health_shortdumps-recurrence-1" src="$check_sap_health_shortdumps-recurrence-1_thumb.png" width="244" height="87" /></a></p>
+++++
+|
+--mode shortdumps-recurrence in einer Service-Detail-Ansicht
+
+
+|
+++++
+<p><a href="$check_sap_health_shortdumps-recurrence-2[2].png"><img title="check_sap_health_shortdumps-recurrence-2" style="border-top: 0px; border-right: 0px; background-image: none; border-bottom: 0px; padding-top: 0px; padding-left: 0px; margin: 3px 20px 7px; border-left: 0px; display: inline; padding-right: 0px" border="0" alt="check_sap_health_shortdumps-recurrence-2" src="$check_sap_health_shortdumps-recurrence-2_thumb.png" width="244" height="87" /></a></p>
+++++
+|
+--mode shortdumps-recurrence als Popup in der Service-Overview-Ansicht
+
+
+|
+++++
+<p><a href="$check_sap_health_shortdumps-count-1[2].png"><img title="check_sap_health_shortdumps-count-1" style="border-top: 0px; border-right: 0px; background-image: none; border-bottom: 0px; padding-top: 0px; padding-left: 0px; margin: 3px 20px 7px; border-left: 0px; display: inline; padding-right: 0px" border="0" alt="check_sap_health_shortdumps-count-1" src="$check_sap_health_shortdumps-count-1_thumb.png" width="244" height="126" /></a></p>
+++++
+|
+--mode shortdumps-count als Popup
+
+|==================================
 
 Erweiterungen
 -------------
