@@ -359,7 +359,7 @@ endoc:
 	asciidoc --unsafe --no-header-footer -a max-width=800 $(PLUGIN).en.txt
 
 clean:
-	rm $(PLUGIN).de.html
+	rm -f $(PLUGIN).de.html
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -20,4 +20,4 @@ endoc:
 	asciidoc --unsafe --no-header-footer -a max-width=800 $(PLUGIN).en.txt
 
 clean:
-	rm $(PLUGIN).de.html
+	rm -f $(PLUGIN).de.html
