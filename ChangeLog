@@ -1,3 +1,6 @@
+2014-06-16 1.3.1.1
+- update GLPlugin
+
 2014-06-13 1.3.1
 - bugfix in failed-updates
 - remove duplicate mtes in BAPI_SYSTEM_MON_GETTREE
