@@ -396,9 +396,9 @@ sub collect_details {
   if ($self->{DECIMALS} != 0) {
     # aus SAP_BASIS Modul BC-CCM-MON-OS
     my $exp = 10 ** $self->{DECIMALS};
-    $self->{ALRELEVVAL} /= $exp;
+    $self->{ALRELEVVAL} = sprintf("%.*f", $self->{DECIMALS}, $self->{ALRELEVVAL} / $exp);
     foreach (qw(TRESHR2Y TRESHG2Y TRESHY2G TRESHY2R)) {
-      $self->{$_} /= $exp if $self->{$_};
+      $self->{$_} = sprintf("%.*f", $self->{DECIMALS}, $self->{$_} / $exp) if $self->{$_};
     }
   }
 }
