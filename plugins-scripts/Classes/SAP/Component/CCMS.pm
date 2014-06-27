@@ -72,7 +72,10 @@ sub init {
           if (! $self->opts->name || ! $self->opts->name2) {
             die "__no_internals__you need to specify --name moniset --name2 monitor";
           }
-          my @tree_nodes = $self->update_tree_cache();
+          if ($self->mode =~ /server::ccms::mte::list/) {
+            $self->update_tree_cache(1);
+          }
+          my @tree_nodes = $self->update_tree_cache(0);
           my %seen;
           my @mtes = sort {
               $a->{MTNAMELONG} cmp $b->{MTNAMELONG}
@@ -136,9 +139,8 @@ sub update_tree_cache {
   my $force = shift;
   my @tree_nodes = ();
   my $statefile = $self->create_statefile(name => 'tree_'.$self->opts->name.'_'.$self->opts->name2);
-  my $update = time - 3600;
+  my $update = time - 24 * 3600;
   if ($force || ! -f $statefile || ((stat $statefile)[9]) < ($update)) {
-  #if (1) {
     my $fl = $self->session->function_lookup("BAPI_SYSTEM_MON_GETTREE");
     my  $fc = $fl->create_function_call;
     $fc->EXTERNAL_USER_NAME("Agent");
