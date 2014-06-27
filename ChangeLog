@@ -1,3 +1,7 @@
+2014-07-26 1.3.3
+- add a mte cache
+- bugfix in st perfdata
+
 2014-06-17 1.3.2
 - fix precision of float values and thresholds
 

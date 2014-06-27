@@ -628,16 +628,19 @@ sub save_state {
   my %params = @_;
   $self->create_statefilesdir();
   my $statefile = $self->create_statefile(%params);
+  my $tmpfile = $self->statefilesdir().'/check_nwc_health_tmp_'.$$;
   if ((ref($params{save}) eq "HASH") && exists $params{save}->{timestamp}) {
     $params{save}->{localtime} = scalar localtime $params{save}->{timestamp};
   }
   my $seekfh = new IO::File;
-  if ($seekfh->open($statefile, "w")) {
+  if ($seekfh->open($tmpfile, "w")) {
     $seekfh->printf("%s", Data::Dumper::Dumper($params{save}));
+    $seekfh->flush();
     $seekfh->close();
     $self->debug(sprintf "saved %s to %s",
         Data::Dumper::Dumper($params{save}), $statefile);
-  } else {
+  }
+  if (! rename $tmpfile, $statefile) {
     $self->add_message(UNKNOWN,
         sprintf "cannot write status file %s! check your filesystem (permissions/usage/integrity) and disk devices", $statefile);
   }
