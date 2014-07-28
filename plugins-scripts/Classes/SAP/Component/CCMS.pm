@@ -12,6 +12,10 @@ sub init {
   my $self = shift;
   my($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) =
       localtime(time);
+  {
+    no strict 'refs';
+    *{'Classes::SAP::Component::CCMS::create_statefile'} = \&{'Classes::SAP::create_statefile'};
+  }
   my $bapi_tic = Time::HiRes::time();
   if ($self->mode =~ /server::ccms::/) {
     eval {
@@ -68,42 +72,33 @@ sub init {
           if (! $self->opts->name || ! $self->opts->name2) {
             die "__no_internals__you need to specify --name moniset --name2 monitor";
           }
-          $fl = $self->session->function_lookup("BAPI_SYSTEM_MON_GETTREE");
-          $fc = $fl->create_function_call;
-          $fc->EXTERNAL_USER_NAME("Agent");
-          $fc->MONITOR_NAME({
-            MS_NAME => $self->opts->name,
-            MONI_NAME => $self->opts->name2,
-          });
-          $fc->invoke;
-          # TREE_NODES
-          if ($fc->RETURN->{TYPE} =~ /^E/) {
-            $self->add_critical($fc->RETURN->{MESSAGE});
-          } else {
-            my %seen;
-            my @mtes = sort {
-                $a->{MTNAMELONG} cmp $b->{MTNAMELONG}
-            } grep {
-              $self->filter_name3($_->{MTNAMELONG})
-            } grep {
-              ! $seen{$_->tid_flat()}++;
-            } map { 
-                MTE->new(%{$_});
-            } @{$fc->TREE_NODES};
-            if ($self->mode =~ /server::ccms::mte::list/) {
-              foreach my $mte (@mtes) {
-                printf "%s %d\n", $mte->{MTNAMELONG}, $mte->{MTCLASS};
-              }
-            } elsif ($self->mode =~ /server::ccms::mte::check/) {
-              $self->set_thresholds();
-              foreach my $mte (@mtes) {
-                next if grep { $mte->{MTCLASS} == $_ } (50, 70, 199);
-                $mte->collect_details($self->session);
-                $mte->check();
-              }
-              if (! @mtes) {
-                $self->add_unknown("no mtes");
-              }
+          if ($self->mode =~ /server::ccms::mte::list/) {
+            $self->update_tree_cache(1);
+          }
+          my @tree_nodes = $self->update_tree_cache(0);
+          my %seen;
+          my @mtes = sort {
+              $a->{MTNAMELONG} cmp $b->{MTNAMELONG}
+          } grep {
+            $self->filter_name3($_->{MTNAMELONG})
+          } grep {
+            ! $seen{$_->tid_flat()}++;
+          } map { 
+              MTE->new(%{$_});
+          } @tree_nodes;
+          if ($self->mode =~ /server::ccms::mte::list/) {
+            foreach my $mte (@mtes) {
+              printf "%s %d\n", $mte->{MTNAMELONG}, $mte->{MTCLASS};
+            }
+          } elsif ($self->mode =~ /server::ccms::mte::check/) {
+            $self->set_thresholds();
+            foreach my $mte (@mtes) {
+              next if grep { $mte->{MTCLASS} == $_ } (50, 70, 199);
+              $mte->collect_details($self->session);
+              $mte->check();
+            }
+            if (! @mtes) {
+              $self->add_unknown("no mtes");
             }
           }
         }
@@ -137,6 +132,37 @@ sub init {
   #    warning => $self->{warning},
   #    critical => $self->{critical},
   #);
+}
+
+sub update_tree_cache {
+  my $self = shift;
+  my $force = shift;
+  my @tree_nodes = ();
+  my $statefile = $self->create_statefile(name => 'tree_'.$self->opts->name.'_'.$self->opts->name2);
+  my $update = time - 24 * 3600;
+  if ($force || ! -f $statefile || ((stat $statefile)[9]) < ($update)) {
+    my $fl = $self->session->function_lookup("BAPI_SYSTEM_MON_GETTREE");
+    my  $fc = $fl->create_function_call;
+    $fc->EXTERNAL_USER_NAME("Agent");
+    $fc->MONITOR_NAME({
+      MS_NAME => $self->opts->name,
+      MONI_NAME => $self->opts->name2,
+    });
+    $fc->invoke;
+    # TREE_NODES
+    if ($fc->RETURN->{TYPE} =~ /^E/) {
+      $self->add_critical($fc->RETURN->{MESSAGE});
+    } else {
+      map { push(@tree_nodes, $_) } @{$fc->TREE_NODES};
+    }
+    $self->save_state(name => 'tree_'.$self->opts->name.'_'.$self->opts->name2, save => \@tree_nodes);
+  }
+  my $content = do { local (@ARGV, $/) = $statefile; my $x = <>; close ARGV; $x };
+  my $VAR1;
+  $VAR1 = eval "$content";
+  my $cache = $VAR1;;
+  @tree_nodes = @{$cache};
+  return @tree_nodes;
 }
 
 sub map_alvalue {
@@ -550,8 +576,8 @@ sub check {
     my $unit = $2;
     $self->add_perfdata(
         label => $self->{OBJECTNAME}."_".$self->{MTNAMESHRT},
-        value => $1,
-        uom => $2 eq "msec" ? "ms" : $2,
+        value => $value,
+        uom => $unit eq "msec" ? "ms" : $unit,
     );
   }
 }
