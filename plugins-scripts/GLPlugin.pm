@@ -17,6 +17,7 @@ use constant { OK => 0, WARNING => 1, CRITICAL => 2, UNKNOWN => 3 };
   our $info = [];
   our $extendedinfo = [];
   our $summary = [];
+  our $variables = {};
 }
 
 sub new {
@@ -28,96 +29,34 @@ sub new {
   return $self;
 }
 
-sub statefilesdir {
+sub init {
   my $self = shift;
-  return $GLPlugin::plugin->{statefilesdir};
-}
-
-#
-# Plugin-related methods
-#
-sub opts { # die beiden _nicht_ in AUTOLOAD schieben, das kracht!
-  my $self = shift;
-  return $GLPlugin::plugin->opts();
-}
-
-sub getopts {
-  my $self = shift;
-  return $GLPlugin::plugin->getopts();
-}
-
-sub mode {
-  my $self = shift;
-  return $GLPlugin::mode;
-}
-
-sub add_ok {
-  my $self = shift;
-  my $message = shift || $self->{info};
-  $self->add_message(OK, $message);
-}
-
-sub add_warning {
-  my $self = shift;
-  my $message = shift || $self->{info};
-  $self->add_message(WARNING, $message);
-}
-
-sub add_critical {
-  my $self = shift;
-  my $message = shift || $self->{info};
-  $self->add_message(CRITICAL, $message);
-}
-
-sub add_unknown {
-  my $self = shift;
-  my $message = shift || $self->{info};
-  $self->add_message(UNKNOWN, $message);
-}
-
-sub add_message {
-  my $self = shift;
-  my $level = shift;
-  my $message = shift || $self->{info};
-  $GLPlugin::plugin->add_message($level, $message)
-      unless $self->is_blacklisted();
-  if (exists $self->{failed}) {
-    if ($level == UNKNOWN && $self->{failed} == OK) {
-      $self->{failed} = $level;
-    } elsif ($level > $self->{failed}) {
-      $self->{failed} = $level;
-    }
+  if ($self->opts->can("blacklist") && $self->opts->blacklist &&
+      -f $self->opts->blacklist) {
+    $self->opts->blacklist = do {
+        local (@ARGV, $/) = $self->opts->blacklist; <> };
   }
 }
 
-sub clear_ok {
+sub dumper {
   my $self = shift;
-  $self->clear_messages(OK);
+  my $object = shift;
+  my $run = $object->{runtime};
+  delete $object->{runtime};
+  printf STDERR "%s\n", Data::Dumper::Dumper($object);
+  $object->{runtime} = $run;
 }
 
-sub clear_warning {
+sub no_such_mode {
   my $self = shift;
-  $self->clear_messages(WARNING);
+  printf "Mode %s is not implemented for this type of device\n",
+      $self->opts->mode;
+  exit 3;
 }
 
-sub clear_critical {
-  my $self = shift;
-  $self->clear_messages(CRITICAL);
-}
-
-sub clear_unknown {
-  my $self = shift;
-  $self->clear_messages(UNKNOWN);
-}
-
-sub clear_all {
-  my $self = shift;
-  $self->clear_ok();
-  $self->clear_warning();
-  $self->clear_critical();
-  $self->clear_unknown();
-}
-
+#########################################################
+# framework-related. setup, options
+#
 sub add_modes {
   my $self = shift;
   my $modes = shift;
@@ -233,14 +172,22 @@ sub set_timeout_alarm {
   alarm($self->opts->timeout);
 }
 
-
-sub init {
+#########################################################
+# global helpers
+#
+sub set_variable {
   my $self = shift;
-  if ($self->opts->can("blacklist") && $self->opts->blacklist &&
-      -f $self->opts->blacklist) {
-    $self->opts->blacklist = do {
-        local (@ARGV, $/) = $self->opts->blacklist; <> };
-  }
+  my $key = shift;
+  my $value = shift;
+  $GLPlugin::variables->{$key} = $value;
+}
+
+sub get_variable {
+  my $self = shift;
+  my $key = shift;
+  my $fallback = shift;
+  return exists $GLPlugin::variables->{$key} ?
+      $GLPlugin::variables->{$key} : $fallback;
 }
 
 sub debug {
@@ -248,7 +195,8 @@ sub debug {
   my $format = shift;
   my $tracefile = "/tmp/".$0.".trace";
   $self->{trace} = -f $tracefile ? 1 : 0;
-  if ($self->opts->verbose && $self->opts->verbose > 10) {
+  if ($self->get_variable("verbose") &&
+      $self->get_variable("verbose") > $self->get_variable("verbosity", 10)) {
     printf("%s: ", scalar localtime);
     printf($format, @_);
     printf "\n";
@@ -303,409 +251,35 @@ sub filter_name3 {
   return $self->filter_namex($self->opts->name3, $name);
 }
 
-sub blacklist {
+sub version_is_minimum {
   my $self = shift;
-  $self->{blacklisted} = 1;
-}
-
-sub add_blacklist {
-  my $self = shift;
-  my $list = shift;
-  $GLPlugin::blacklist = join('/',
-      (split('/', $self->opts->blacklist), $list));
-}
-
-sub is_blacklisted {
-  my $self = shift;
-  if (! $self->opts->can("blacklist")) {
+  my $version = shift;
+  my $installed_version;
+  my $newer = 1;
+  if ($self->get_variable("version")) {
+    $installed_version = $self->get_variable("version");
+  } elsif (exists $self->{version}) {
+    $installed_version = $self->{version};
+  } else {
     return 0;
   }
-  if (! exists $self->{blacklisted}) {
-    $self->{blacklisted} = 0;
+  my @v1 = map { $_ eq "x" ? 0 : $_ } split(/\./, $version);
+  my @v2 = split(/\./, $installed_version);
+  if (scalar(@v1) > scalar(@v2)) {
+    push(@v2, (0) x (scalar(@v1) - scalar(@v2)));
+  } elsif (scalar(@v2) > scalar(@v1)) {
+    push(@v1, (0) x (scalar(@v2) - scalar(@v1)));
   }
-  if (exists $self->{blacklisted} && $self->{blacklisted}) {
-    return $self->{blacklisted};
-  }
-  # FAN:459,203/TEMP:102229/ENVSUBSYSTEM
-  # FAN_459,FAN_203,TEMP_102229,ENVSUBSYSTEM
-  if ($self->opts->blacklist =~ /_/) {
-    foreach my $bl_item (split(/,/, $self->opts->blacklist)) {
-      if ($bl_item eq $self->internal_name()) {
-        $self->{blacklisted} = 1;
-      }
-    }
-  } else {
-    foreach my $bl_items (split(/\//, $self->opts->blacklist)) {
-      if ($bl_items =~ /^(\w+):([\:\d\-,]+)$/) {
-        my $bl_type = $1;
-        my $bl_names = $2;
-        foreach my $bl_name (split(/,/, $bl_names)) {
-          if ($bl_type."_".$bl_name eq $self->internal_name()) {
-            $self->{blacklisted} = 1;
-          }
-        }
-      } elsif ($bl_items =~ /^(\w+)$/) {
-        if ($bl_items eq $self->internal_name()) {
-          $self->{blacklisted} = 1;
-        }
-      }
-    }
-  } 
-  return $self->{blacklisted};
-}
-
-sub set_level {
-  my $self = shift;
-  my $code = shift;
-  $code = (qw(ok warning critical unknown))[$code] if $code =~ /^\d+$/;
-  $code = lc $code;
-  if (! exists $self->{tmp_level}) {
-    $self->{tmp_level} = {
-      ok => 0,
-      warning => 0,
-      critical => 0,
-      unknown => 0,
-    };
-  }
-  $self->{tmp_level}->{$code}++;
-}
-
-sub get_level {
-  my $self = shift;
-  return OK if ! exists $self->{tmp_level};
-  my $code = OK;
-  $code ||= CRITICAL if $self->{tmp_level}->{critical};
-  $code ||= WARNING  if $self->{tmp_level}->{warning};
-  $code ||= UNKNOWN  if $self->{tmp_level}->{unknown};
-  return $code;
-}
-
-sub add_info {
-  my $self = shift;
-  my $info = shift;
-  $info = $self->is_blacklisted() ? $info.' (blacklisted)' : $info;
-  $self->{info} = $info;
-  push(@{$GLPlugin::info}, $info);
-}
-
-sub annotate_info {
-  my $self = shift;
-  my $annotation = shift;
-  my $lastinfo = pop(@{$GLPlugin::info});
-  $lastinfo .= sprintf ' (%s)', $annotation;
-  push(@{$GLPlugin::info}, $lastinfo);
-}
-
-sub add_extendedinfo {
-  my $self = shift;
-  my $info = shift;
-  $self->{extendedinfo} = $info;
-  return if ! $self->opts->extendedinfo;
-  push(@{$GLPlugin::extendedinfo}, $info);
-}
-
-sub get_info {
-  my $self = shift;
-  my $separator = shift || ' ';
-  return join($separator , @{$GLPlugin::info});
-}
-
-sub get_extendedinfo {
-  my $self = shift;
-  my $separator = shift || ' ';
-  return join($separator, @{$GLPlugin::extendedinfo});
-}
-
-sub add_summary {
-  my $self = shift;
-  my $summary = shift;
-  push(@{$GLPlugin::summary}, $summary);
-}
-
-sub get_summary {
-  my $self = shift;
-  return join(', ', @{$GLPlugin::summary});
-}
-
-sub valdiff {
-  my $self = shift;
-  my $pparams = shift;
-  my %params = %{$pparams};
-  my @keys = @_;
-  my $now = time;
-  my $newest_history_set = {};
-  my $last_values = $self->load_state(%params) || eval {
-    my $empty_events = {};
-    foreach (@keys) {
-      if (ref($self->{$_}) eq "ARRAY") {
-        $empty_events->{$_} = [];
-      } else {
-        $empty_events->{$_} = 0;
-      }
-    }
-    $empty_events->{timestamp} = 0;
-    if ($self->opts->lookback) {
-      $empty_events->{lookback_history} = {};
-    }
-    $empty_events;
-  };
-  foreach (@keys) {
-    if ($self->opts->lookback) {
-      # find a last_value in the history which fits lookback best
-      # and overwrite $last_values->{$_} with historic data
-      if (exists $last_values->{lookback_history}->{$_}) {
-        foreach my $date (sort {$a <=> $b} keys %{$last_values->{lookback_history}->{$_}}) {
-            $newest_history_set->{$_} = $last_values->{lookback_history}->{$_}->{$date};
-            $newest_history_set->{timestamp} = $date;
-        }
-        foreach my $date (sort {$a <=> $b} keys %{$last_values->{lookback_history}->{$_}}) {
-          if ($date >= ($now - $self->opts->lookback)) {
-            $last_values->{$_} = $last_values->{lookback_history}->{$_}->{$date};
-            $last_values->{timestamp} = $date;
-            last;
-          } else {
-            delete $last_values->{lookback_history}->{$_}->{$date};
-          }
-        }
-      }
-    }
-    if ($self->{$_} =~ /^\d+$/) {
-      $last_values->{$_} = 0 if ! exists $last_values->{$_};
-      if ($self->{$_} >= $last_values->{$_}) {
-        $self->{'delta_'.$_} = $self->{$_} - $last_values->{$_};
-      } else {
-        # vermutlich db restart und zaehler alle auf null
-        $self->{'delta_'.$_} = $self->{$_};
-      }
-      $self->debug(sprintf "delta_%s %f", $_, $self->{'delta_'.$_});
-    } elsif (ref($self->{$_}) eq "ARRAY") {
-      if ((! exists $last_values->{$_} || ! defined $last_values->{$_}) && exists $params{lastarray}) {
-        # innerhalb der lookback-zeit wurde nichts in der lookback_history
-        # gefunden. allenfalls irgendwas aelteres. normalerweise
-        # wuerde jetzt das array als [] initialisiert.
-        # d.h. es wuerde ein delta geben, @found s.u.
-        # wenn man das nicht will, sondern einfach aktuelles array mit
-        # dem array des letzten laufs vergleichen will, setzt man lastarray
-        $last_values->{$_} = %{$newest_history_set} ?
-            $newest_history_set->{$_} : []
-      } elsif ((! exists $last_values->{$_} || ! defined $last_values->{$_}) && ! exists $params{lastarray}) {
-        $last_values->{$_} = [] if ! exists $last_values->{$_};
-      } elsif (exists $last_values->{$_} && ! defined $last_values->{$_}) {
-        # $_ kann es auch ausserhalb des lookback_history-keys als normalen
-        # key geben. der zeigt normalerweise auf den entspr. letzten
-        # lookback_history eintrag. wurde der wegen ueberalterung abgeschnitten
-        # ist der hier auch undef.
-        $last_values->{$_} = %{$newest_history_set} ?
-            $newest_history_set->{$_} : []
-      }
-      my %saved = map { $_ => 1 } @{$last_values->{$_}};
-      my %current = map { $_ => 1 } @{$self->{$_}};
-      my @found = grep(!defined $saved{$_}, @{$self->{$_}});
-      my @lost = grep(!defined $current{$_}, @{$last_values->{$_}});
-      $self->{'delta_found_'.$_} = \@found;
-      $self->{'delta_lost_'.$_} = \@lost;
+  foreach my $pos (0..$#v1) {
+    if ($v2[$pos] > $v1[$pos]) {
+      $newer = 1;
+      last;
+    } elsif ($v2[$pos] < $v1[$pos]) {
+      $newer = 0;
+      last;
     }
   }
-  $self->{'delta_timestamp'} = $now - $last_values->{timestamp};
-  $params{save} = eval {
-    my $empty_events = {};
-    foreach (@keys) {
-      $empty_events->{$_} = $self->{$_};
-    }
-    $empty_events->{timestamp} = $now;
-    if ($self->opts->lookback) {
-      $empty_events->{lookback_history} = $last_values->{lookback_history};
-      foreach (@keys) {
-        $empty_events->{lookback_history}->{$_}->{$now} = $self->{$_};
-      }
-    }
-    $empty_events;
-  };
-  $self->save_state(%params);
-}
-
-sub create_statefilesdir {
-  my $self = shift;
-  if (! -d $self->statefilesdir()) {
-    eval {
-      use File::Path;
-      mkpath $self->statefilesdir();
-    };
-    if ($@ || ! -w $self->statefilesdir()) {
-      $self->add_message(UNKNOWN,
-        sprintf "cannot create status dir %s! check your filesystem (permissions/usage/integrity) and disk devices", $self->statefilesdir());
-    }
-  } elsif (! -w $self->statefilesdir()) {
-    $self->add_message(UNKNOWN,
-        sprintf "cannot write status dir %s! check your filesystem (permissions/usage/integrity) and disk devices", $self->statefilesdir());
-  }
-}
-
-sub create_statefile {
-  my $self = shift;
-  my %params = @_;
-  my $extension = "";
-  $extension .= $params{name} ? '_'.$params{name} : '';
-  $extension =~ s/\//_/g;
-  $extension =~ s/\(/_/g;
-  $extension =~ s/\)/_/g;
-  $extension =~ s/\*/_/g;
-  $extension =~ s/\s/_/g;
-  return sprintf "%s/%s%s", $self->statefilesdir(),
-      $self->opts->mode, lc $extension;
-}
-
-sub schimpf {
-  my $self = shift;
-  printf "statefilesdir %s is not writable.\nYou didn't run this plugin as root, didn't you?\n", $self->statefilesdir();
-}
-
-# $self->protect_value('1.1-flat_index', 'cpu_busy', 'percent');
-sub protect_value {
-  my $self = shift;
-  my $ident = shift;
-  my $key = shift;
-  my $validfunc = shift;
-  if (ref($validfunc) ne "CODE" && $validfunc eq "percent") {
-    $validfunc = sub {
-      my $value = shift;
-      return ($value < 0 || $value > 100) ? 0 : 1;
-    };
-  }
-  if (&$validfunc($self->{$key})) {
-    $self->save_state(name => 'protect_'.$ident.'_'.$key, save => {
-        $key => $self->{$key},
-        exception => 0,
-    });
-  } else {
-    # if the device gives us an clearly wrong value, simply use the last value.
-    my $laststate = $self->load_state(name => 'protect_'.$ident.'_'.$key);
-    $self->debug(sprintf "self->{%s} is %s and invalid for the %dth time",
-        $key, $self->{$key}, $laststate->{exception} + 1);
-    if ($laststate->{exception} <= 5) {
-      # but only 5 times.
-      # if the error persists, somebody has to check the device.
-      $self->{$key} = $laststate->{$key};
-    }
-    $self->save_state(name => 'protect_'.$ident.'_'.$key, save => {
-        $key => $laststate->{$key},
-        exception => $laststate->{exception}++,
-    });
-  }
-}
-
-sub save_state {
-  my $self = shift;
-  my %params = @_;
-  $self->create_statefilesdir();
-  my $statefile = $self->create_statefile(%params);
-  my $tmpfile = $self->statefilesdir().'/check_nwc_health_tmp_'.$$;
-  if ((ref($params{save}) eq "HASH") && exists $params{save}->{timestamp}) {
-    $params{save}->{localtime} = scalar localtime $params{save}->{timestamp};
-  }
-  my $seekfh = new IO::File;
-  if ($seekfh->open($tmpfile, "w")) {
-    $seekfh->printf("%s", Data::Dumper::Dumper($params{save}));
-    $seekfh->flush();
-    $seekfh->close();
-    $self->debug(sprintf "saved %s to %s",
-        Data::Dumper::Dumper($params{save}), $statefile);
-  }
-  if (! rename $tmpfile, $statefile) {
-    $self->add_message(UNKNOWN,
-        sprintf "cannot write status file %s! check your filesystem (permissions/usage/integrity) and disk devices", $statefile);
-  }
-}
-
-sub load_state {
-  my $self = shift;
-  my %params = @_;
-  my $statefile = $self->create_statefile(%params);
-  if ( -f $statefile) {
-    our $VAR1;
-    eval {
-      require $statefile;
-    };
-    if($@) {
-      printf "rumms\n";
-    }
-    $self->debug(sprintf "load %s", Data::Dumper::Dumper($VAR1));
-    return $VAR1;
-  } else {
-    return undef;
-  }
-}
-
-sub dumper {
-  my $self = shift;
-  my $object = shift;
-  my $run = $object->{runtime};
-  delete $object->{runtime};
-  printf STDERR "%s\n", Data::Dumper::Dumper($object);
-  $object->{runtime} = $run;
-}
-
-sub no_such_mode {
-  my $self = shift;
-  printf "Mode %s is not implemented for this type of device\n",
-      $self->opts->mode;
-  exit 3;
-}
-
-sub check_pidfile {
-  my $self = shift;
-  my $fh = new IO::File;
-  if ($fh->open($self->{pidfile}, "r")) {
-    my $pid = $fh->getline();
-    $fh->close();
-    if (! $pid) {
-      $self->debug("Found pidfile %s with no valid pid. Exiting.",
-          $self->{pidfile});
-      return 0;
-    } else {
-      $self->debug("Found pidfile %s with pid %d", $self->{pidfile}, $pid);
-      kill 0, $pid;
-      if ($! == Errno::ESRCH) {
-        $self->debug("This pidfile is stale. Writing a new one");
-        $self->write_pidfile();
-        return 1;
-      } else {
-        $self->debug("This pidfile is held by a running process. Exiting");
-        return 0;
-      }
-    }
-  } else {
-    $self->debug("Found no pidfile. Writing a new one");
-    $self->write_pidfile();
-    return 1;
-  }
-}
-
-sub write_pidfile {
-  my $self = shift;
-  if (! -d dirname($self->{pidfile})) {
-    eval "require File::Path;";
-    if (defined(&File::Path::mkpath)) {
-      import File::Path;
-      eval { mkpath(dirname($self->{pidfile})); };
-    } else {
-      my @dirs = ();
-      map {
-          push @dirs, $_;
-          mkdir(join('/', @dirs))
-              if join('/', @dirs) && ! -d join('/', @dirs);
-      } split(/\//, dirname($self->{pidfile}));
-    }
-  }
-  my $fh = new IO::File;
-  $fh->autoflush(1);
-  if ($fh->open($self->{pidfile}, "w")) {
-    $fh->printf("%s", $$);
-    $fh->close();
-  } else {
-    $self->debug("Could not write pidfile %s", $self->{pidfile});
-    die "pid file could not be written";
-  }
+  return $newer;
 }
 
 sub accentfree {
@@ -885,6 +459,521 @@ sub load_my_extension {
   }
 }
 
+#########################################################
+# runtime methods
+#
+sub mode {
+  my $self = shift;
+  return $GLPlugin::mode;
+}
+
+sub statefilesdir {
+  my $self = shift;
+  return $GLPlugin::plugin->{statefilesdir};
+}
+
+sub opts { # die beiden _nicht_ in AUTOLOAD schieben, das kracht!
+  my $self = shift;
+  return $GLPlugin::plugin->opts();
+}
+
+sub getopts {
+  my $self = shift;
+  $GLPlugin::plugin->getopts();
+  # es kann sein, dass beim aufraeumen zum schluss als erstes objekt
+  # das $GLPlugin::plugin geloescht wird. in anderen destruktoren
+  # (insb. fuer dbi disconnect) steht dann $self->opts->verbose
+  # nicht mehr zur verfuegung bzw. $GLPlugin::plugin->opts ist undef.
+  $self->set_variable("verbose", $self->opts->verbose);
+  #
+  # die gueltigkeit von modes wird bereits hier geprueft und nicht danach
+  # in validate_args. (zwischen getopts und validate_args wird
+  # normalerweise classify aufgerufen, welches bereits eine verbindung
+  # zum endgeraet herstellt. bei falschem mode waere das eine verschwendung
+  # bzw. durch den exit3 ein evt. unsauberes beenden der verbindung.
+  if ((! grep { $self->opts->mode eq $_ } map { $_->{spec} } @{$GLPlugin::plugin->{modes}}) &&
+      (! grep { $self->opts->mode eq $_ } map { defined $_->{alias} ? @{$_->{alias}} : () } @{$GLPlugin::plugin->{modes}})) {
+    printf "UNKNOWN - mode %s\n", $self->opts->mode;
+    $self->opts->print_help();
+    exit 3;
+  }
+}
+
+sub add_ok {
+  my $self = shift;
+  my $message = shift || $self->{info};
+  $self->add_message(OK, $message);
+}
+
+sub add_warning {
+  my $self = shift;
+  my $message = shift || $self->{info};
+  $self->add_message(WARNING, $message);
+}
+
+sub add_critical {
+  my $self = shift;
+  my $message = shift || $self->{info};
+  $self->add_message(CRITICAL, $message);
+}
+
+sub add_unknown {
+  my $self = shift;
+  my $message = shift || $self->{info};
+  $self->add_message(UNKNOWN, $message);
+}
+
+sub add_message {
+  my $self = shift;
+  my $level = shift;
+  my $message = shift || $self->{info};
+  $GLPlugin::plugin->add_message($level, $message)
+      unless $self->is_blacklisted();
+  if (exists $self->{failed}) {
+    if ($level == UNKNOWN && $self->{failed} == OK) {
+      $self->{failed} = $level;
+    } elsif ($level > $self->{failed}) {
+      $self->{failed} = $level;
+    }
+  }
+}
+
+sub clear_ok {
+  my $self = shift;
+  $self->clear_messages(OK);
+}
+
+sub clear_warning {
+  my $self = shift;
+  $self->clear_messages(WARNING);
+}
+
+sub clear_critical {
+  my $self = shift;
+  $self->clear_messages(CRITICAL);
+}
+
+sub clear_unknown {
+  my $self = shift;
+  $self->clear_messages(UNKNOWN);
+}
+
+sub clear_all { # deprecated, use clear_messages
+  my $self = shift;
+  $self->clear_ok();
+  $self->clear_warning();
+  $self->clear_critical();
+  $self->clear_unknown();
+}
+
+sub set_level {
+  my $self = shift;
+  my $code = shift;
+  $code = (qw(ok warning critical unknown))[$code] if $code =~ /^\d+$/;
+  $code = lc $code;
+  if (! exists $self->{tmp_level}) {
+    $self->{tmp_level} = {
+      ok => 0,
+      warning => 0,
+      critical => 0,
+      unknown => 0,
+    };
+  }
+  $self->{tmp_level}->{$code}++;
+}
+
+sub get_level {
+  my $self = shift;
+  return OK if ! exists $self->{tmp_level};
+  my $code = OK;
+  $code ||= CRITICAL if $self->{tmp_level}->{critical};
+  $code ||= WARNING  if $self->{tmp_level}->{warning};
+  $code ||= UNKNOWN  if $self->{tmp_level}->{unknown};
+  return $code;
+}
+
+#########################################################
+# blacklisting
+#
+sub blacklist {
+  my $self = shift;
+  $self->{blacklisted} = 1;
+}
+
+sub add_blacklist {
+  my $self = shift;
+  my $list = shift;
+  $GLPlugin::blacklist = join('/',
+      (split('/', $self->opts->blacklist), $list));
+}
+
+sub is_blacklisted {
+  my $self = shift;
+  if (! $self->opts->can("blacklist")) {
+    return 0;
+  }
+  if (! exists $self->{blacklisted}) {
+    $self->{blacklisted} = 0;
+  }
+  if (exists $self->{blacklisted} && $self->{blacklisted}) {
+    return $self->{blacklisted};
+  }
+  # FAN:459,203/TEMP:102229/ENVSUBSYSTEM
+  # FAN_459,FAN_203,TEMP_102229,ENVSUBSYSTEM
+  if ($self->opts->blacklist =~ /_/) {
+    foreach my $bl_item (split(/,/, $self->opts->blacklist)) {
+      if ($bl_item eq $self->internal_name()) {
+        $self->{blacklisted} = 1;
+      }
+    }
+  } else {
+    foreach my $bl_items (split(/\//, $self->opts->blacklist)) {
+      if ($bl_items =~ /^(\w+):([\:\d\-,]+)$/) {
+        my $bl_type = $1;
+        my $bl_names = $2;
+        foreach my $bl_name (split(/,/, $bl_names)) {
+          if ($bl_type."_".$bl_name eq $self->internal_name()) {
+            $self->{blacklisted} = 1;
+          }
+        }
+      } elsif ($bl_items =~ /^(\w+)$/) {
+        if ($bl_items eq $self->internal_name()) {
+          $self->{blacklisted} = 1;
+        }
+      }
+    }
+  } 
+  return $self->{blacklisted};
+}
+
+#########################################################
+# additional info
+#
+sub add_info {
+  my $self = shift;
+  my $info = shift;
+  $info = $self->is_blacklisted() ? $info.' (blacklisted)' : $info;
+  $self->{info} = $info;
+  push(@{$GLPlugin::info}, $info);
+}
+
+sub annotate_info { # deprecated
+  my $self = shift;
+  my $annotation = shift;
+  my $lastinfo = pop(@{$GLPlugin::info});
+  $lastinfo .= sprintf ' (%s)', $annotation;
+  push(@{$GLPlugin::info}, $lastinfo);
+}
+
+sub add_extendedinfo {  # deprecated
+  my $self = shift;
+  my $info = shift;
+  $self->{extendedinfo} = $info;
+  return if ! $self->opts->extendedinfo;
+  push(@{$GLPlugin::extendedinfo}, $info);
+}
+
+sub get_info {
+  my $self = shift;
+  my $separator = shift || ' ';
+  return join($separator , @{$GLPlugin::info});
+}
+
+sub get_extendedinfo {
+  my $self = shift;
+  my $separator = shift || ' ';
+  return join($separator, @{$GLPlugin::extendedinfo});
+}
+
+sub add_summary {  # deprecated
+  my $self = shift;
+  my $summary = shift;
+  push(@{$GLPlugin::summary}, $summary);
+}
+
+sub get_summary {
+  my $self = shift;
+  return join(', ', @{$GLPlugin::summary});
+}
+
+#########################################################
+# persistency
+#
+sub valdiff {
+  my $self = shift;
+  my $pparams = shift;
+  my %params = %{$pparams};
+  my @keys = @_;
+  my $now = time;
+  my $newest_history_set = {};
+  my $last_values = $self->load_state(%params) || eval {
+    my $empty_events = {};
+    foreach (@keys) {
+      if (ref($self->{$_}) eq "ARRAY") {
+        $empty_events->{$_} = [];
+      } else {
+        $empty_events->{$_} = 0;
+      }
+    }
+    $empty_events->{timestamp} = 0;
+    if ($self->opts->lookback) {
+      $empty_events->{lookback_history} = {};
+    }
+    $empty_events;
+  };
+  $self->{'delta_timestamp'} = $now - $last_values->{timestamp};
+  foreach (@keys) {
+    if ($self->opts->lookback) {
+      # find a last_value in the history which fits lookback best
+      # and overwrite $last_values->{$_} with historic data
+      if (exists $last_values->{lookback_history}->{$_}) {
+        foreach my $date (sort {$a <=> $b} keys %{$last_values->{lookback_history}->{$_}}) {
+            $newest_history_set->{$_} = $last_values->{lookback_history}->{$_}->{$date};
+            $newest_history_set->{timestamp} = $date;
+        }
+        foreach my $date (sort {$a <=> $b} keys %{$last_values->{lookback_history}->{$_}}) {
+          if ($date >= ($now - $self->opts->lookback)) {
+            $last_values->{$_} = $last_values->{lookback_history}->{$_}->{$date};
+            $last_values->{timestamp} = $date;
+            last;
+          } else {
+            delete $last_values->{lookback_history}->{$_}->{$date};
+          }
+        }
+      }
+    }
+    if ($self->{$_} =~ /^\d+$/) {
+      $last_values->{$_} = 0 if ! exists $last_values->{$_};
+      if ($self->{$_} >= $last_values->{$_}) {
+        $self->{'delta_'.$_} = $self->{$_} - $last_values->{$_};
+      } else {
+        # vermutlich db restart und zaehler alle auf null
+        $self->{'delta_'.$_} = $self->{$_};
+      }
+      $self->debug(sprintf "delta_%s %f", $_, $self->{'delta_'.$_});
+      $self->{$_.'_per_sec'} = $self->{'delta_timestamp'} ?
+          $self->{'delta_'.$_} / $self->{'delta_timestamp'} : 0;
+    } elsif (ref($self->{$_}) eq "ARRAY") {
+      if ((! exists $last_values->{$_} || ! defined $last_values->{$_}) && exists $params{lastarray}) {
+        # innerhalb der lookback-zeit wurde nichts in der lookback_history
+        # gefunden. allenfalls irgendwas aelteres. normalerweise
+        # wuerde jetzt das array als [] initialisiert.
+        # d.h. es wuerde ein delta geben, @found s.u.
+        # wenn man das nicht will, sondern einfach aktuelles array mit
+        # dem array des letzten laufs vergleichen will, setzt man lastarray
+        $last_values->{$_} = %{$newest_history_set} ?
+            $newest_history_set->{$_} : []
+      } elsif ((! exists $last_values->{$_} || ! defined $last_values->{$_}) && ! exists $params{lastarray}) {
+        $last_values->{$_} = [] if ! exists $last_values->{$_};
+      } elsif (exists $last_values->{$_} && ! defined $last_values->{$_}) {
+        # $_ kann es auch ausserhalb des lookback_history-keys als normalen
+        # key geben. der zeigt normalerweise auf den entspr. letzten
+        # lookback_history eintrag. wurde der wegen ueberalterung abgeschnitten
+        # ist der hier auch undef.
+        $last_values->{$_} = %{$newest_history_set} ?
+            $newest_history_set->{$_} : []
+      }
+      my %saved = map { $_ => 1 } @{$last_values->{$_}};
+      my %current = map { $_ => 1 } @{$self->{$_}};
+      my @found = grep(!defined $saved{$_}, @{$self->{$_}});
+      my @lost = grep(!defined $current{$_}, @{$last_values->{$_}});
+      $self->{'delta_found_'.$_} = \@found;
+      $self->{'delta_lost_'.$_} = \@lost;
+    }
+  }
+  $params{save} = eval {
+    my $empty_events = {};
+    foreach (@keys) {
+      $empty_events->{$_} = $self->{$_};
+    }
+    $empty_events->{timestamp} = $now;
+    if ($self->opts->lookback) {
+      $empty_events->{lookback_history} = $last_values->{lookback_history};
+      foreach (@keys) {
+        $empty_events->{lookback_history}->{$_}->{$now} = $self->{$_};
+      }
+    }
+    $empty_events;
+  };
+  $self->save_state(%params);
+}
+
+sub create_statefilesdir {
+  my $self = shift;
+  if (! -d $self->statefilesdir()) {
+    eval {
+      use File::Path;
+      mkpath $self->statefilesdir();
+    };
+    if ($@ || ! -w $self->statefilesdir()) {
+      $self->add_message(UNKNOWN,
+        sprintf "cannot create status dir %s! check your filesystem (permissions/usage/integrity) and disk devices", $self->statefilesdir());
+    }
+  } elsif (! -w $self->statefilesdir()) {
+    $self->add_message(UNKNOWN,
+        sprintf "cannot write status dir %s! check your filesystem (permissions/usage/integrity) and disk devices", $self->statefilesdir());
+  }
+}
+
+sub create_statefile {
+  my $self = shift;
+  my %params = @_;
+  my $extension = "";
+  $extension .= $params{name} ? '_'.$params{name} : '';
+  $extension =~ s/\//_/g;
+  $extension =~ s/\(/_/g;
+  $extension =~ s/\)/_/g;
+  $extension =~ s/\*/_/g;
+  $extension =~ s/\s/_/g;
+  return sprintf "%s/%s%s", $self->statefilesdir(),
+      $self->opts->mode, lc $extension;
+}
+
+sub schimpf {
+  my $self = shift;
+  printf "statefilesdir %s is not writable.\nYou didn't run this plugin as root, didn't you?\n", $self->statefilesdir();
+}
+
+# $self->protect_value('1.1-flat_index', 'cpu_busy', 'percent');
+sub protect_value {
+  my $self = shift;
+  my $ident = shift;
+  my $key = shift;
+  my $validfunc = shift;
+  if (ref($validfunc) ne "CODE" && $validfunc eq "percent") {
+    $validfunc = sub {
+      my $value = shift;
+      return ($value < 0 || $value > 100) ? 0 : 1;
+    };
+  } elsif (ref($validfunc) ne "CODE" && $validfunc eq "positive") {
+    $validfunc = sub {
+      my $value = shift;
+      return ($value < 0) ? 0 : 1;
+    };
+  }
+  if (&$validfunc($self->{$key})) {
+    $self->save_state(name => 'protect_'.$ident.'_'.$key, save => {
+        $key => $self->{$key},
+        exception => 0,
+    });
+  } else {
+    # if the device gives us an clearly wrong value, simply use the last value.
+    my $laststate = $self->load_state(name => 'protect_'.$ident.'_'.$key);
+    $self->debug(sprintf "self->{%s} is %s and invalid for the %dth time",
+        $key, $self->{$key}, $laststate->{exception} + 1);
+    if ($laststate->{exception} <= 5) {
+      # but only 5 times.
+      # if the error persists, somebody has to check the device.
+      $self->{$key} = $laststate->{$key};
+    }
+    $self->save_state(name => 'protect_'.$ident.'_'.$key, save => {
+        $key => $laststate->{$key},
+        exception => $laststate->{exception}++,
+    });
+  }
+}
+
+sub save_state {
+  my $self = shift;
+  my %params = @_;
+  $self->create_statefilesdir();
+  my $statefile = $self->create_statefile(%params);
+  my $tmpfile = $self->statefilesdir().'/check__health_tmp_'.$$;
+  if ((ref($params{save}) eq "HASH") && exists $params{save}->{timestamp}) {
+    $params{save}->{localtime} = scalar localtime $params{save}->{timestamp};
+  }
+  my $seekfh = new IO::File;
+  if ($seekfh->open($tmpfile, "w")) {
+    $seekfh->printf("%s", Data::Dumper::Dumper($params{save}));
+    $seekfh->flush();
+    $seekfh->close();
+    $self->debug(sprintf "saved %s to %s",
+        Data::Dumper::Dumper($params{save}), $statefile);
+  }
+  if (! rename $tmpfile, $statefile) {
+    $self->add_message(UNKNOWN,
+        sprintf "cannot write status file %s! check your filesystem (permissions/usage/integrity) and disk devices", $statefile);
+  }
+}
+
+sub load_state {
+  my $self = shift;
+  my %params = @_;
+  my $statefile = $self->create_statefile(%params);
+  if ( -f $statefile) {
+    our $VAR1;
+    eval {
+      require $statefile;
+    };
+    if($@) {
+      printf "rumms\n";
+    }
+    $self->debug(sprintf "load %s", Data::Dumper::Dumper($VAR1));
+    return $VAR1;
+  } else {
+    return undef;
+  }
+}
+
+#########################################################
+# daemon mode
+#
+sub check_pidfile {
+  my $self = shift;
+  my $fh = new IO::File;
+  if ($fh->open($self->{pidfile}, "r")) {
+    my $pid = $fh->getline();
+    $fh->close();
+    if (! $pid) {
+      $self->debug("Found pidfile %s with no valid pid. Exiting.",
+          $self->{pidfile});
+      return 0;
+    } else {
+      $self->debug("Found pidfile %s with pid %d", $self->{pidfile}, $pid);
+      kill 0, $pid;
+      if ($! == Errno::ESRCH) {
+        $self->debug("This pidfile is stale. Writing a new one");
+        $self->write_pidfile();
+        return 1;
+      } else {
+        $self->debug("This pidfile is held by a running process. Exiting");
+        return 0;
+      }
+    }
+  } else {
+    $self->debug("Found no pidfile. Writing a new one");
+    $self->write_pidfile();
+    return 1;
+  }
+}
+
+sub write_pidfile {
+  my $self = shift;
+  if (! -d dirname($self->{pidfile})) {
+    eval "require File::Path;";
+    if (defined(&File::Path::mkpath)) {
+      import File::Path;
+      eval { mkpath(dirname($self->{pidfile})); };
+    } else {
+      my @dirs = ();
+      map {
+          push @dirs, $_;
+          mkdir(join('/', @dirs))
+              if join('/', @dirs) && ! -d join('/', @dirs);
+      } split(/\//, dirname($self->{pidfile}));
+    }
+  }
+  my $fh = new IO::File;
+  $fh->autoflush(1);
+  if ($fh->open($self->{pidfile}, "w")) {
+    $fh->printf("%s", $$);
+    $fh->close();
+  } else {
+    $self->debug("Could not write pidfile %s", $self->{pidfile});
+    die "pid file could not be written";
+  }
+}
+
 sub AUTOLOAD {
   my $self = shift;
   return if ($AUTOLOAD =~ /DESTROY/);
@@ -1052,8 +1141,8 @@ sub add_perfdata {
   }
   my $warn = "";
   my $crit = "";
-  my $min = "";
-  my $max = "";
+  my $min = defined $args{min} ? $args{min} : "";
+  my $max = defined $args{max} ? $args{max} : "";
   if ($args{thresholds} || (! exists $args{warning} && ! exists $args{critical})) {
     if (exists $self->{thresholds}->{$label}->{warning}) {
       $warn = $self->{thresholds}->{$label}->{warning};
@@ -1076,6 +1165,28 @@ sub add_perfdata {
   if ($uom eq "%") {
     $min = 0;
     $max = 100;
+  }
+  if (defined $args{places}) {
+    # cut off excessive decimals which may be the result of a division
+    # length = places*2, no trailing zeroes
+    if ($warn ne "") {
+      $warn = join("", map {
+          s/\.0+$//; $_
+      } map {
+          s/(\.[1-9]+)0+$/$1/; $_
+      } map {
+          /[\+\-\d\.]+/ ? sprintf '%.'.2*$args{places}.'f', $_ : $_;
+      } split(/([\+\-\d\.]+)/, $warn));
+    }
+    if ($crit ne "") {
+      $crit = join("", map {
+          s/\.0+$//; $_
+      } map {
+          s/(\.[1-9]+)0+$/$1/; $_
+      } map {
+          /[\+\-\d\.]+/ ? sprintf '%.'.2*$args{places}.'f', $_ : $_;
+      } split(/([\+\-\d\.]+)/, $crit));
+    }
   }
   push @{$self->{perfdata}}, sprintf("'%s'=%s%s;%s;%s;%s;%s",
       $label, $value, $uom, $warn, $crit, $min, $max)
@@ -1221,9 +1332,18 @@ sub set_thresholds {
   my %params = @_;
   if (exists $params{metric}) {
     my $metric = $params{metric};
+    # erst die hartcodierten defaultschwellwerte
     $self->{thresholds}->{$metric}->{warning} = $params{warning};
     $self->{thresholds}->{$metric}->{critical} = $params{critical};
-    if ($self->opts->warningx) {
+    # dann die defaultschwellwerte von der kommandozeile
+    if (defined $self->opts->warning) {
+      $self->{thresholds}->{$metric}->{warning} = $self->opts->warning;
+    }
+    if (defined $self->opts->critical) {
+      $self->{thresholds}->{$metric}->{critical} = $self->opts->critical;
+    }
+    # dann die ganz spezifischen schwellwerte von der kommandozeile
+    if ($self->opts->warningx) { # muss nicht auf defined geprueft werden, weils ein hash ist
       foreach my $key (keys %{$self->opts->warningx}) {
         next if $key ne $metric;
         $self->{thresholds}->{$metric}->{warning} = $self->opts->warningx->{$key};
@@ -1237,12 +1357,11 @@ sub set_thresholds {
     }
   } else {
     $self->{thresholds}->{default}->{warning} =
-        $self->opts->warning || $params{warning} || 0;
+        defined $self->opts->warning ? $self->opts->warning : defined $params{warning} ? $params{warning} : 0;
     $self->{thresholds}->{default}->{critical} =
-        $self->opts->critical || $params{critical} || 0;
+        defined $self->opts->critical ? $self->opts->critical : defined $params{critical} ? $params{critical} : 0;
   }
 }
-
 
 sub force_thresholds {
   my $self = shift;
