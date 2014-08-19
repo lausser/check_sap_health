@@ -138,9 +138,7 @@ sub validate_args {
     $ENV{NRPE_MULTILINESUPPORT} = 0;
   }
   if (! $self->opts->statefilesdir) {
-    if (exists $ENV{NAGIOS__SERVICESTATEFILESDIR}) {
-      $self->override_opt('statefilesdir', $ENV{NAGIOS__SERVICESTATEFILESDIR});
-    } elsif (exists $ENV{OMD_ROOT}) {
+    if (exists $ENV{OMD_ROOT}) {
       $self->override_opt('statefilesdir', $ENV{OMD_ROOT}."/var/tmp/".$GLPlugin::plugin->{name});
     } else {
       $self->override_opt('statefilesdir', "/var/tmp/".$GLPlugin::plugin->{name});
@@ -479,6 +477,7 @@ sub opts { # die beiden _nicht_ in AUTOLOAD schieben, das kracht!
 
 sub getopts {
   my $self = shift;
+  my $envparams = shift || [];
   $GLPlugin::plugin->getopts();
   # es kann sein, dass beim aufraeumen zum schluss als erstes objekt
   # das $GLPlugin::plugin geloescht wird. in anderen destruktoren
@@ -1004,7 +1003,7 @@ sub AUTOLOAD {
         if $self->opts->verbose >= 2;
   } elsif ($AUTOLOAD =~ /^.*::(status_code|check_messages|nagios_exit|html_string|perfdata_string|selected_perfdata|check_thresholds|get_thresholds|opts)$/) {
     return $GLPlugin::plugin->$1(@_);
-  } elsif ($AUTOLOAD =~ /^.*::(clear_messages|suppress_messages|add_html|add_perfdata|override_opt|set_thresholds|force_thresholds)$/) {
+  } elsif ($AUTOLOAD =~ /^.*::(clear_messages|suppress_messages|add_html|add_perfdata|override_opt|create_opt|set_thresholds|force_thresholds)$/) {
     $GLPlugin::plugin->$1(@_);
   } else {
     $self->debug("AUTOLOAD: class %s has no method %s\n",
@@ -1056,10 +1055,7 @@ sub AUTOLOAD {
   my $self = shift;
   return if ($AUTOLOAD =~ /DESTROY/);
   $self->debug("AUTOLOAD %s\n", $AUTOLOAD)
-  # vergewissern ob $self->{opts} existiert, weil u.U. schon vorher
-  # bzw. nach einem nagios_exit GLPlugin::Commandline::Getopt zerstoert wurde,
-  # weiss der geier warum.
-      if $self->{opts} && $self->{opts}->verbose >= 2;
+        if $self->{opts}->verbose >= 2;
   if ($AUTOLOAD =~ /^.*::(add_arg|override_opt|create_opt)$/) {
     $self->{opts}->$1(@_);
   }
@@ -1607,6 +1603,16 @@ sub getopts {
     }
     foreach (keys %commandline) {
       $self->{opts}->{$_} = $commandline{$_};
+    }
+    foreach (grep { exists $_->{env} } @{$self->{_args}}) {
+      $_->{spec} =~ /^([\w\-]+)/;
+      my $spec = $1;
+      if (exists $ENV{'NAGIOS__HOST'.$_->{env}}) {
+        $self->{opts}->{$spec} = $ENV{'NAGIOS__HOST'.$_->{env}};
+      }
+      if (exists $ENV{'NAGIOS__SERVICE'.$_->{env}}) {
+        $self->{opts}->{$spec} = $ENV{'NAGIOS__SERVICE'.$_->{env}};
+      }
     }
     foreach (grep { exists $_->{aliasfor} } @{$self->{_args}}) {
       my $field = $_->{aliasfor};
