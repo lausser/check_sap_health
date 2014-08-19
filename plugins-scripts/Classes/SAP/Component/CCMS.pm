@@ -94,6 +94,7 @@ sub init {
             $self->set_thresholds();
             foreach my $mte (@mtes) {
               next if grep { $mte->{MTCLASS} == $_ } (50, 70, 199);
+              $self->debug(sprintf "collect_details for %s", $mte->{MTNAMELONG});
               $mte->collect_details($self->session);
               $mte->check();
             }
@@ -102,6 +103,7 @@ sub init {
             }
           }
         }
+        $self->debug("logoff");
         $fl = $self->session->function_lookup("BAPI_XMI_LOGOFF");
         $fc = $fl->create_function_call;
         $fc->INTERFACE('XAL');
@@ -141,6 +143,8 @@ sub update_tree_cache {
   my $statefile = $self->create_statefile(name => 'tree_'.$self->opts->name.'_'.$self->opts->name2);
   my $update = time - 24 * 3600;
   if ($force || ! -f $statefile || ((stat $statefile)[9]) < ($update)) {
+    $self->debug(sprintf "updating the tree cache for %s %s",
+        $self->opts->name, $self->opts->name2);
     my $fl = $self->session->function_lookup("BAPI_SYSTEM_MON_GETTREE");
     my  $fc = $fl->create_function_call;
     $fc->EXTERNAL_USER_NAME("Agent");
@@ -155,6 +159,8 @@ sub update_tree_cache {
     } else {
       map { push(@tree_nodes, $_) } @{$fc->TREE_NODES};
     }
+    $self->debug(sprintf "updated the tree cache for %s %s",
+        $self->opts->name, $self->opts->name2);
     $self->save_state(name => 'tree_'.$self->opts->name.'_'.$self->opts->name2, save => \@tree_nodes);
   }
   my $content = do { local (@ARGV, $/) = $statefile; my $x = <>; close ARGV; $x };
@@ -162,6 +168,8 @@ sub update_tree_cache {
   $VAR1 = eval "$content";
   my $cache = $VAR1;;
   @tree_nodes = @{$cache};
+  $self->debug(sprintf "return cached tree nodes for %s %s",
+      $self->opts->name, $self->opts->name2);
   return @tree_nodes;
 }
 

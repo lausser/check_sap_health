@@ -1056,7 +1056,10 @@ sub AUTOLOAD {
   my $self = shift;
   return if ($AUTOLOAD =~ /DESTROY/);
   $self->debug("AUTOLOAD %s\n", $AUTOLOAD)
-        if $self->{opts}->verbose >= 2;
+  # vergewissern ob $self->{opts} existiert, weil u.U. schon vorher
+  # bzw. nach einem nagios_exit GLPlugin::Commandline::Getopt zerstoert wurde,
+  # weiss der geier warum.
+      if $self->{opts} && $self->{opts}->verbose >= 2;
   if ($AUTOLOAD =~ /^.*::(add_arg|override_opt|create_opt)$/) {
     $self->{opts}->$1(@_);
   }
