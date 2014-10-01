@@ -12,7 +12,7 @@ use constant { OK => 0, WARNING => 1, CRITICAL => 2, UNKNOWN => 3 };
 {
   our $mode = undef;
   our $plugin = undef;
-  our $pluginname = basename($0);
+  our $pluginname = basename($ENV{'NAGIOS_PLUGIN'} || $0);
   our $blacklist = undef;
   our $info = [];
   our $extendedinfo = [];
@@ -191,7 +191,7 @@ sub get_variable {
 sub debug {
   my $self = shift;
   my $format = shift;
-  my $tracefile = "/tmp/".$0.".trace";
+  my $tracefile = "/tmp/".$GLPlugin::pluginname.".trace";
   $self->{trace} = -f $tracefile ? 1 : 0;
   if ($self->get_variable("verbose") &&
       $self->get_variable("verbose") > $self->get_variable("verbosity", 10)) {
@@ -414,7 +414,7 @@ sub load_my_extension {
     if (! $self->opts->get("with-mymodules-dyn-dir")) {
       $self->override_opt("with-mymodules-dyn-dir", "");
     }
-    my $plugin_name = basename($0);
+    my $plugin_name = $GLPlugin::pluginname;
     $plugin_name =~ /check_(.*?)_health/;
     $plugin_name = "Check".uc(substr($1, 0, 1)).substr($1, 1)."Health";
     foreach my $libpath (split(":", $self->opts->get("with-mymodules-dyn-dir"))) {
@@ -1061,10 +1061,17 @@ sub AUTOLOAD {
   }
 }
 
+sub DESTROY {
+  my $self = shift;
+  # ohne dieses DESTROY rennt nagios_exit in obiges AUTOLOAD rein
+  # und fliegt aufs Maul, weil {opts} bereits nicht mehr existiert.
+  # Unerklaerliches Verhalten.
+}
+
 sub debug {
   my $self = shift;
   my $format = shift;
-  my $tracefile = "/tmp/".$0.".trace";
+  my $tracefile = "/tmp/".$GLPlugin::pluginname.".trace";
   $self->{trace} = -f $tracefile ? 1 : 0;
   if ($self->opts->verbose && $self->opts->verbose > 10) {
     printf("%s: ", scalar localtime);
@@ -1526,13 +1533,11 @@ sub _init {
   my $self = shift;
   my %params = @_;
   # Check params
-  my $plugin = basename($0);
-  #my %attr = validate( @_, {
   my %attr = (
     usage => 1,
     version => 0,
     url => 0,
-    plugin => { default => $plugin },
+    plugin => { default => $GLPlugin::pluginname },
     blurb => 0,
     extra => 0,
     'extra-opts' => 0,
