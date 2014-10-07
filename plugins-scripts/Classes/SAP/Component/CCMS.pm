@@ -118,7 +118,7 @@ sub init {
       $message =~ s/\s+$//g;
       chomp($message);
       if ($message =~ /__no_internals__/) {
-        $message =~ s/at $0 line.*//g;
+        $message =~ s/at $GLPlugin::pluginname line.*//g;
         $message =~ s/__no_internals__//g;
       }
       $self->add_unknown($message);
