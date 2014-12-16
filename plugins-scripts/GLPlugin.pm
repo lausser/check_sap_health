@@ -138,7 +138,17 @@ sub validate_args {
     $ENV{NRPE_MULTILINESUPPORT} = 0;
   }
   if (! $self->opts->statefilesdir) {
-    if (exists $ENV{OMD_ROOT}) {
+    if ($^O =~ /MSWin/) {
+      if (defined $ENV{TEMP}) {
+        $self->override_opt('statefilesdir', $ENV{TEMP}."/".$GLPlugin::plugin->{name});
+      } elsif (defined $ENV{TMP}) {
+        $self->override_opt('statefilesdir', $ENV{TMP}."/".$GLPlugin::plugin->{name});
+      } elsif (defined $ENV{windir}) {
+        $self->override_opt('statefilesdir', File::Spec->catfile($ENV{windir}, 'Temp')."/".$GLPlugin::plugin->{name});
+      } else {
+        $self->override_opt('statefilesdir', "C:/".$GLPlugin::plugin->{name});
+      }
+    } elsif (exists $ENV{OMD_ROOT}) {
       $self->override_opt('statefilesdir', $ENV{OMD_ROOT}."/var/tmp/".$GLPlugin::plugin->{name});
     } else {
       $self->override_opt('statefilesdir', "/var/tmp/".$GLPlugin::plugin->{name});
@@ -492,9 +502,11 @@ sub getopts {
   # bzw. durch den exit3 ein evt. unsauberes beenden der verbindung.
   if ((! grep { $self->opts->mode eq $_ } map { $_->{spec} } @{$GLPlugin::plugin->{modes}}) &&
       (! grep { $self->opts->mode eq $_ } map { defined $_->{alias} ? @{$_->{alias}} : () } @{$GLPlugin::plugin->{modes}})) {
-    printf "UNKNOWN - mode %s\n", $self->opts->mode;
-    $self->opts->print_help();
-    exit 3;
+    if ($self->opts->mode !~ /^my-/) {
+      printf "UNKNOWN - mode %s\n", $self->opts->mode;
+      $self->opts->print_help();
+      exit 3;
+    }
   }
 }
 
@@ -1746,4 +1758,5 @@ sub check {
   # items (e.g. sensorthresholds enhance sensors)
   # normal tableitems should have their own check-method
 }
+
 
