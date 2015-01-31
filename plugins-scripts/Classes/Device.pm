@@ -5,7 +5,8 @@ use strict;
 
 sub classify {
   my $self = shift;
-  if (! ($self->opts->ashost && $self->opts->username && $self->opts->password)) {
+  #if (! (($self->opts->ashost || $self->opts->mshost) && $self->opts->username && $self->opts->password)) {
+  if (! ($self->opts->ashost || $self->opts->mshost)) {
     $self->add_unknown('specify at least hostname, username and password');
   } else {
     bless $self, 'Classes::SAP';

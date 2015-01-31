@@ -28,32 +28,54 @@ sub check_rfc_and_model {
   chdir("/tmp");
   if (eval "require sapnwrfc") {
     my %params = (
-      'lcheck' => '1',
+      'LCHECK' => '1',
     );
-    if ($self->opts->mode =~ /sapinfo/) {
-      $params{lcheck} = 0;
-    }
     if ($self->opts->ashost) {
-      $params{ashost} = $self->opts->ashost;
+      $params{ASHOST} = $self->opts->ashost;
     }
     if ($self->opts->sysnr) {
-      $params{sysnr} = $self->opts->sysnr;
+      $params{SYSNR} = $self->opts->sysnr;
+    }
+    if ($self->opts->mshost) {
+      $params{MSHOST} = $self->opts->mshost;
+    }
+    if ($self->opts->msserv) {
+      $params{MSSERV} = $self->opts->msserv;
+    }
+    if ($self->opts->r3name) {
+      $params{R3NAME} = $self->opts->r3name;
+    }
+    if ($self->opts->group) {
+      $params{GROUP} = $self->opts->group;
+    }
+    if ($self->opts->gwhost) {
+      $params{GWHOST} = $self->opts->gwhost;
+    }
+    if ($self->opts->gwserv) {
+      $params{GWSERV} = $self->opts->gwserv;
     }
     if ($self->opts->client) {
-      $params{client} = $self->opts->client;
+      $params{CLIENT} = $self->opts->client;
     }
     if ($self->opts->lang) {
-      $params{lang} = $self->opts->lang;
+      $params{LANG} = $self->opts->lang;
     }
     if ($self->opts->username) {
-      $params{user} = $self->opts->username;
+      $params{USER} = $self->opts->username;
     }
     if ($self->opts->password) {
-      $params{passwd} = $self->opts->password;
+      $params{PASSWD} = $self->opts->password;
     }
     if ($self->opts->verbose) {
-      $params{debug} = '1';
-      $params{trace} = '1';
+      $params{DEBUG} = '1';
+      $params{TRACE} = '1';
+    }
+    if ($self->opts->mode =~ /sapinfo/) {
+      $params{LCHECK} = '0';
+      $params{USER} = "";
+      $params{PASSWD} = "";
+      $params{ABAP_DEBUG} = 0;
+      $params{SAPGUI} = 0;
     }
     $self->{tic} = Time::HiRes::time();
     my $session = undef;

@@ -94,25 +94,61 @@ $plugin->add_arg(
     spec => 'ashost|H=s',
     help => '--ashost
    Hostname or IP-address of the application server',
-    required => 1,
+    required => 0,
 );
 $plugin->add_arg(
     spec => 'sysnr=s',
     help => '--sysnr
    The system number',
-    required => 1,
+    required => 0,
+);
+$plugin->add_arg(
+    spec => 'mshost=s',
+    help => '--mshost
+   Hostname or IP-address of the message server',
+    required => 0,
+);
+$plugin->add_arg(
+    spec => 'msserv=s',
+    help => '--msserv
+   The port for mshost connections',
+    required => 0,
+);
+$plugin->add_arg(
+    spec => 'r3name=s',
+    help => '--r3name
+   The SID for mshost connections',
+    required => 0,
+);
+$plugin->add_arg(
+    spec => 'group=s',
+    help => '--group
+   The logon group for mshost connections',
+    required => 0,
+);
+$plugin->add_arg(
+    spec => 'gwhost=s',
+    help => '--gwhost
+   The gateway host',
+    required => 0,
+);
+$plugin->add_arg(
+    spec => 'gwserv=s',
+    help => '--gwserv
+   The gateway port',
+    required => 0,
 );
 $plugin->add_arg(
     spec => 'username=s',
     help => '--username
    The username',
-    required => 1,
+    required => 0,
 );
 $plugin->add_arg(
     spec => 'password=s',
     help => '--password
    The password',
-    required => 1,
+    required => 0,
 );
 $plugin->add_arg(
     spec => 'client=s',
