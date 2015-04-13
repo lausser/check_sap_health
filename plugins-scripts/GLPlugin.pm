@@ -336,8 +336,21 @@ sub dump {
   printf "\n";
   foreach (grep !/^(info|trace|warning|critical|blacklisted|extendedinfo|flat_indices|indices)/, sort keys %{$self}) {
     if (defined $self->{$_} && ref($self->{$_}) eq "ARRAY") {
+      my $have_flat_indices = 1;
       foreach my $obj (@{$self->{$_}}) {
-        $obj->dump();
+        $have_flat_indices = 0 if (! exists $obj->{flat_indices});
+      }
+      if ($have_flat_indices) {
+        foreach my $obj (sort {
+            join('', map { sprintf("%30d",$_) } split( /\./, $a->{flat_indices})) cmp
+            join('', map { sprintf("%30d",$_) } split( /\./, $b->{flat_indices}))
+        } @{$self->{$_}}) {
+          $obj->dump();
+        }
+      } else {
+        foreach my $obj (@{$self->{$_}}) {
+          $obj->dump();
+        }
       }
     }
   }
@@ -470,9 +483,9 @@ sub load_my_extension {
 #########################################################
 # runtime methods
 #
-sub mode {
+sub mode : lvalue {
   my $self = shift;
-  return $GLPlugin::mode;
+  $GLPlugin::mode;
 }
 
 sub statefilesdir {
@@ -668,11 +681,12 @@ sub add_info {
   push(@{$GLPlugin::info}, $info);
 }
 
-sub annotate_info { # deprecated
+sub annotate_info {
   my $self = shift;
   my $annotation = shift;
   my $lastinfo = pop(@{$GLPlugin::info});
   $lastinfo .= sprintf ' (%s)', $annotation;
+  $self->{info} = $lastinfo;
   push(@{$GLPlugin::info}, $lastinfo);
 }
 
@@ -688,6 +702,11 @@ sub get_info {
   my $self = shift;
   my $separator = shift || ' ';
   return join($separator , @{$GLPlugin::info});
+}
+
+sub get_last_info {
+  my $self = shift;
+  return pop(@{$GLPlugin::info});
 }
 
 sub get_extendedinfo {
@@ -1148,6 +1167,16 @@ sub add_perfdata {
   my $value = $args{value};
   my $uom = $args{uom} || "";
   my $format = '%d';
+
+  if ($self->opts->can("morphperfdata") && $self->opts->morphperfdata) {
+    # 'Intel [R] Interface (\d+) usage'='nic$1'
+    foreach my $key (keys %{$self->opts->morphperfdata}) {
+      if ($label =~ /$key/) {
+        my $replacement = '"'.$self->opts->morphperfdata->{$key}.'"';
+        $label =~ s/$key/$replacement/ee;
+      }
+    }
+  }
   if ($value =~ /\./) {
     if (defined $args{places}) {
       $value = sprintf '%.'.$args{places}.'f', $value;
