@@ -141,6 +141,8 @@ sub init {
     $self->analyze_and_check_snap_subsystem("Classes::SAP::Component::SNAP");
   } elsif ($self->mode =~ /^server::updates::/) {
     $self->analyze_and_check_snap_subsystem("Classes::SAP::Component::UpdateSubsystem");
+  } elsif ($self->mode =~ /^server::backgroundjobs::/) {
+    $self->analyze_and_check_snap_subsystem("Classes::SAP::Component::BackgroundjobSubsystem");
   }
 }
 
@@ -164,6 +166,32 @@ sub create_statefile {
   $extension =~ s/\s/_/g;
   return sprintf "%s/%s_%s_%s%s", $self->statefilesdir(),
       $self->opts->ashost, $self->opts->sysnr, $self->opts->mode, lc $extension;
+}
+
+sub epoch_to_abap_date {
+  my $self = shift;
+  my $timestamp = shift || time;
+  my($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) =
+      localtime($timestamp);
+  return sprintf "%04d%02d%02d", $year + 1900, $mon + 1, $mday;
+}
+
+sub epoch_to_abap_time {
+  my $self = shift;
+  my $timestamp = shift || time;
+  my($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) =
+      localtime($timestamp);
+  return sprintf "%02d%02d%02d", $hour, $min, $sec;
+}
+
+sub epoch_to_abap_date_and_time {
+  my $self = shift;
+  my $timestamp = shift || time;
+  my($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) =
+      localtime($timestamp);
+  my $date = sprintf "%04d%02d%02d", $year + 1900, $mon + 1, $mday;
+  my $time = sprintf "%02d%02d%02d", $hour, $min, $sec;
+  return ($date, $time);
 }
 
 sub DESTROY {

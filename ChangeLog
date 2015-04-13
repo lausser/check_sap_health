@@ -1,3 +1,12 @@
+2015-03-31 1.5.1
+- add mode exceeded-failed-jobs
+
+2015-03-23 1.5
+- add mode failed-jobs
+  Implementation of this really useful feature was sponsored by
+  XIT cross information technologies GmbH, http://www.crossit.at
+  Thanks a lot!
+
 2015-01-30 1.4
 - add message server connections
 

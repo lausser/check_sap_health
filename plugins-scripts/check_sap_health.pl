@@ -85,10 +85,28 @@ $plugin->add_mode(
     help => 'Counts new entries in the VHDR table (since last run or appeared in the interval specified by --lookback)',
 );
 $plugin->add_mode(
+    internal => 'server::backgroundjobs::failed',
+    spec => 'failed-jobs',
+    alias => undef,
+    help => 'Looks for failed jobs in the TBTCO table (since last run or in the interval specified by --lookback)',
+);
+$plugin->add_mode(
+    internal => 'server::backgroundjobs::runtime',
+    spec => 'exceeded-failed-jobs',
+    alias => undef,
+    help => 'Looks for jobs in the TBTCO table which failed or exceeded a certain runtime (since last run or in the interval specified by --lookback)',
+);
+$plugin->add_mode(
     internal => 'server::snap::list',
-    spec => 'shortdumps-list',
+    spec => 'list-shortdumps',
     alias => undef,
     help => 'Read the SNAP table and list the short dumps',
+);
+$plugin->add_mode(
+    internal => 'server::backgroundjobs::list',
+    spec => 'list-jobs',
+    alias => undef,
+    help => 'Read the TBTCO table and list the jobs',
 );
 $plugin->add_arg(
     spec => 'ashost|H=s',
@@ -253,6 +271,12 @@ $plugin->add_arg(
     spec => 'mitigation=s',
     help => "--mitigation
    The parameter allows you to change a critical error to a warning.",
+    required => 0,
+);
+$plugin->add_arg(
+    spec => 'unique',
+    help => "--unique
+   The parameter limits the output to unique (or only the last) items.",
     required => 0,
 );
 $plugin->add_arg(
