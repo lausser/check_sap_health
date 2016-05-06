@@ -277,6 +277,8 @@ sub new {
   }
   # CUSGRPNAME = Eigenschaften: ..der MTE-Klasse
   $self->{MTNAMELONG} = $self->mkMTNAMELONG;
+  $self->{MTNAGIOSNAME} = $self->opts->mtelong ?
+      $self->{MTNAMELONG} : $self->{MTNAMESHRT};
   $self->{TID} = $self->tid();
   if ($self->{MTCLASS} == MT_CLASS_PERFORMANCE) {
     bless $self, "MTE::Performance";
@@ -440,7 +442,7 @@ sub collect_details {
 sub check {
   my $self = shift;
   my $perfdata = {
-    label => $self->{OBJECTNAME}."_".$self->{MTNAMESHRT},
+    label => $self->{OBJECTNAME}."_".$self->{MTNAGIOSNAME},
     value => $self->{ALRELEVVAL},
   };
   if ($self->{VALUNIT}) {
@@ -465,8 +467,8 @@ sub check {
   $self->add_perfdata(%{$perfdata});
   $self->add_message(
       $self->check_thresholds(
-          value => $self->{ALRELEVVAL}, metric => $self->{OBJECTNAME}."_".$self->{MTNAMESHRT}),
-      sprintf "%s %s = %s%s", $self->{OBJECTNAME}, $self->{MTNAMESHRT}, $self->{ALRELEVVAL}, $self->{VALUNIT}
+          value => $self->{ALRELEVVAL}, metric => $perfdata->{label}),
+      sprintf "%s %s = %s%s", $self->{OBJECTNAME}, $self->{MTNAGIOSNAME}, $self->{ALRELEVVAL}, $self->{VALUNIT}
   );
 }
 
@@ -521,7 +523,7 @@ sub check {
   my $self = shift;
   $self->debug(sprintf "mte %s has alert %s",
       $self->mkMTNAMELONG(), MTE::sap2nagios($self->{ACTUAL_ALERT_DATA_VALUE}));
-  $self->add_info($self->{MTNAMESHRT}." = ".$self->{MSG});
+  $self->add_info($self->{MTNAGIOSNAME}." = ".$self->{MSG});
   $self->add_message(MTE::sap2nagios($self->{ACTUAL_ALERT_DATA_VALUE}));
 }
 
@@ -549,7 +551,7 @@ sub check {
   $self->debug(sprintf "mte %s has alert %s",
       $self->mkMTNAMELONG(), MTE::sap2nagios($self->{ACTUAL_ALERT_DATA_VALUE}));
   $self->{MSG} ||= "<empty>";
-  $self->add_info($self->{MTNAMESHRT}." = ".$self->{MSG});
+  $self->add_info($self->{MTNAGIOSNAME}." = ".$self->{MSG});
   $self->add_message(MTE::sap2nagios($self->{ACTUAL_ALERT_DATA_VALUE}));
 }
 
@@ -577,13 +579,13 @@ sub check {
   $self->debug(sprintf "mte %s has alert 0",
       $self->mkMTNAMELONG());
   $self->{TEXT} ||= "<empty>";
-  $self->add_info($self->{MTNAMESHRT}." = ".$self->{TEXT});
+  $self->add_info($self->{MTNAGIOSNAME}." = ".$self->{TEXT});
   $self->add_ok();
   if ($self->{TEXT} =~ /([\d\.]+)\s*(s|%|[kmgt]{0,1}b|ms|msec)/) {
     my $value = $1;
     my $unit = $2;
     $self->add_perfdata(
-        label => $self->{OBJECTNAME}."_".$self->{MTNAMESHRT},
+        label => $self->{OBJECTNAME}."_".$self->{MTNAGIOSNAME},
         value => $value,
         uom => $unit eq "msec" ? "ms" : $unit,
     );

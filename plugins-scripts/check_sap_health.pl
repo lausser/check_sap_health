@@ -195,6 +195,13 @@ $plugin->add_arg(
     required => 0,
 );
 $plugin->add_arg(
+    spec => 'mtelong',
+    help => "--mtelong
+   Output the full path of MTEs",
+    default => 0,
+    required => 0,
+);
+$plugin->add_arg(
     spec => 'unique',
     help => "--unique
    The parameter limits the output to unique (or only the last) items.",

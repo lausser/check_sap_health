@@ -194,6 +194,11 @@ sub epoch_to_abap_date_and_time {
   return ($date, $time);
 }
 
+sub compatibility_methods {
+  my ($self) = @_;
+  # there are no old-style extensions out there
+}
+
 sub DESTROY {
   my $self = shift;
   my $plugin_exit = $?;
