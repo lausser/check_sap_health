@@ -1,5 +1,5 @@
 package Classes::Device;
-our @ISA = qw(GLPlugin);
+our @ISA = qw(Monitoring::GLPlugin);
 use strict;
 
 

@@ -1,9 +1,17 @@
-# /usr/bin/perl -w
+#! /usr/bin/perl
 
 use strict;
-use File::Basename;
 
-
+eval {
+  if ( ! grep /AUTOLOAD/, keys %Monitoring::GLPlugin::) {
+    require Monitoring::GLPlugin;
+  }
+};
+if ($@) {
+  printf "UNKNOWN - module Monitoring::GLPlugin was not found. Either build a standalone version of this plugin or set PERL5LIB\n";
+  printf "%s\n", $@;
+  exit 3;
+}
 
 my $plugin = Classes::Device->new(
     shortname => '',
@@ -15,7 +23,6 @@ my $plugin = Classes::Device->new(
     blurb => 'This plugin checks sap netweaver ',
     url => 'http://labs.consol.de/nagios/check_sap_health',
     timeout => 60,
-    plugin => basename($0),
 );
 $plugin->add_mode(
     internal => 'device::uptime',
@@ -23,7 +30,6 @@ $plugin->add_mode(
     alias => undef,
     help => 'Check the uptime of the device',
 );
-
 $plugin->add_mode(
     internal => 'server::connectiontime',
     spec => 'connection-time',
@@ -183,94 +189,9 @@ $plugin->add_arg(
     required => 0,
 );
 $plugin->add_arg(
-    spec => 'mode=s',
-    help => "--mode
-   A keyword which tells the plugin what to do",
-    required => 1,
-);
-$plugin->add_arg(
-    spec => 'report=s',
-    help => "--report
-   Can be used to shorten the output",
-    required => 0,
-    default => 'long',
-);
-$plugin->add_arg(
-    spec => 'lookback=s',
-    help => "--lookback
-   The amount of time you want to look back when calculating average rates.
-   Use it for mode interface-errors or interface-usage. Without --lookback
-   the time between two runs of check_nwc_health is the base for calculations.
-   If you want your checkresult to be based for example on the past hour,
-   use --lookback 3600. ",
-    required => 0,
-);
-$plugin->add_arg(
-    spec => 'warning=s',
-    help => '--warning
-   The warning threshold',
-    required => 0,
-);
-$plugin->add_arg(
-    spec => 'critical=s',
-    help => '--critical
-   The critical threshold',
-    required => 0,
-);
-
-$plugin->add_arg(
-    spec => 'name=s',
-    help => "--name
-   The name of whatever",
-    required => 0,
-);
-$plugin->add_arg(
-    spec => 'drecksptkdb=s',
-    help => "--drecksptkdb
-   This parameter must be used instead of --name, because Devel::ptkdb is stealing the latter from the command line",
-    aliasfor => "name",
-    required => 0,
-);
-$plugin->add_arg(
-    spec => 'name2=s',
-    help => "--name2
-   The secondary name of whatever",
-    required => 0,
-);
-$plugin->add_arg(
-    spec => 'name3=s',
-    help => "--name3
-   The tertiary name of whatever",
-    required => 0,
-);
-$plugin->add_arg(
-    spec => 'regexp',
-    help => "--regexp
-   Parameter name/name2/name3 will be interpreted as (perl) regular expression",
-    required => 0,
-);
-$plugin->add_arg(
     spec => 'separator=s',
     help => "--separator
    A separator for MTE path elements",
-    required => 0,
-);
-$plugin->add_arg(
-    spec => 'warningx=s%',
-    help => '--warningx
-   The extended warning thresholds',
-    required => 0,
-);
-$plugin->add_arg(
-    spec => 'criticalx=s%',
-    help => '--criticalx
-   The extended critical thresholds',
-    required => 0,
-);
-$plugin->add_arg(
-    spec => 'mitigation=s',
-    help => "--mitigation
-   The parameter allows you to change a critical error to a warning.",
     required => 0,
 );
 $plugin->add_arg(
@@ -279,37 +200,7 @@ $plugin->add_arg(
    The parameter limits the output to unique (or only the last) items.",
     required => 0,
 );
-$plugin->add_arg(
-    spec => 'selectedperfdata=s',
-    help => "--selectedperfdata
-   The parameter allows you to limit the list of performance data. It's a perl regexp.
-   Only matching perfdata show up in the output",
-    required => 0,
-);
-$plugin->add_arg(
-    spec => 'negate=s%',
-    help => "--negate
-   The parameter allows you to map exit levels, such as warning=critical",
-    required => 0,
-);
-$plugin->add_arg(
-    spec => 'with-mymodules-dyn-dir=s',
-    help => '--with-mymodules-dyn-dir
-   A directory where own extensions can be found',
-    required => 0,
-);
-$plugin->add_arg(
-    spec => 'statefilesdir=s',
-    help => '--statefilesdir
-   An alternate directory where the plugin can save files',
-    required => 0,
-);
-$plugin->add_arg(
-    spec => 'multiline',
-    help => '--multiline
-   Multiline output',
-    required => 0,
-);
+$plugin->add_default_args();
 
 $plugin->getopts();
 $plugin->classify();

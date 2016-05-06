@@ -1,65 +1,53 @@
-2015-04-23 1.5.1.1
-- update GLPlugin
-
-2015-03-31 1.5.1
-- add mode exceeded-failed-jobs
-
-2015-03-23 1.5
-- add mode failed-jobs
+* 2015-07-13 1.6
+  new directory layout, standalone
+* 2015-05-13 1.5.1.2
+  allow the weirdest characters in passeord with rfc-encoding
+* 2015-04-23 1.5.1.1
+  update GLPlugin
+* 2015-03-31 1.5.1
+  add mode exceeded-failed-jobs
+* 2015-03-23 1.5
+  add mode failed-jobs
   Implementation of this really useful feature was sponsored by
   XIT cross information technologies GmbH, http://www.crossit.at
   Thanks a lot!
-
-2015-01-30 1.4
-- add message server connections
-
-2014-12-16 1.3.3.4
-- update GLPlugin
-
-2014-10-01 1.3.3.3
-- update GLPlugin
-- fix epn bug
-- +epn
-
-2014-08-19 1.3.3.2
-- GLPlugin update, destructor bugfix
-
-2014-07-28 1.3.3.1
-- GLPlugin update
-
-2014-07-26 1.3.3
-- add a mte cache
-- bugfix in st perfdata
-- update GLPlugin
-
-2014-06-17 1.3.2
-- fix precision of float values and thresholds
-
-2014-06-16 1.3.1.1
-- update GLPlugin
-
-2014-06-13 1.3.1
-- bugfix in failed-updates
-- remove duplicate mtes in BAPI_SYSTEM_MON_GETTREE
-
-2014-06-12 1.3
-- bugfix in MT_CLASS_PERFORMANCE ALRELEVVAL and Thresholds. 
+* 2015-01-30 1.4
+  add message server connections
+* 2014-12-16 1.3.3.4
+  update GLPlugin
+* 2014-10-01 1.3.3.3
+  update GLPlugin
+  fix epn bug
+  +epn
+* 2014-08-19 1.3.3.2
+  GLPlugin update, destructor bugfix
+* 2014-07-28 1.3.3.1
+  GLPlugin update
+* 2014-07-26 1.3.3
+  add a mte cache
+  bugfix in st perfdata
+  update GLPlugin
+* 2014-06-17 1.3.2
+  fix precision of float values and thresholds
+* 2014-06-16 1.3.1.1
+  update GLPlugin
+* 2014-06-13 1.3.1
+  bugfix in failed-updates
+  remove duplicate mtes in BAPI_SYSTEM_MON_GETTREE
+* 2014-06-12 1.3
+  bugfix in MT_CLASS_PERFORMANCE ALRELEVVAL and Thresholds. 
   This means: throw away your rrd-files. The metrics you collected are mostly wrong. 
   You should also throw away your old sap-plugins and use check_sap_health :-)
   Many thanks to Silvan Hunkirchen who provided me with the virtual clue.
-- add mode failed-updates
-
-2014-06-05 1.2
-- add modes shortdumps-list, shortdumps-count, shortdumps-recurrence
-- add report html
-- add warningx/criticalx for mtes
-
-2014-04-16 1.1.1
-- add cleanup of dev_rfc-Traces
-
-2014-02-28 1.1
-- fix threshold-driven perormance mtes
-
-2014-02-07 1.0.1
-- bugfix in mode sapinfo
-- single-message mtes
+  add mode failed-updates
+* 2014-06-05 1.2
+  add modes shortdumps-list, shortdumps-count, shortdumps-recurrence
+  add report html
+  add warningx/criticalx for mtes
+* 2014-04-16 1.1.1
+  add cleanup of dev_rfc-Traces
+* 2014-02-28 1.1
+  fix threshold-driven perormance mtes
+* 2014-02-07 1.0.1
+  bugfix in mode sapinfo
+  single-message mtes

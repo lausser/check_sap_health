@@ -1,5 +1,5 @@
 package Classes::SAP::Component::CCMS;
-our @ISA = qw(GLPlugin::Item);
+our @ISA = qw(Monitoring::GLPlugin::Item);
 use strict;
 
 
@@ -118,7 +118,7 @@ sub init {
       $message =~ s/\s+$//g;
       chomp($message);
       if ($message =~ /__no_internals__/) {
-        $message =~ s/at $GLPlugin::pluginname line.*//g;
+        $message =~ s/at $Monitoring::GLPlugin::pluginname line.*//g;
         $message =~ s/__no_internals__//g;
       }
       $self->add_unknown($message);
@@ -190,7 +190,7 @@ sub map_alvalue {
 
 
 package MTE;
-our @ISA = qw(GLPlugin::TableItem);
+our @ISA = qw(Monitoring::GLPlugin::TableItem);
 use strict;
 
 #our @ISA = qw(SAP::CCMS);

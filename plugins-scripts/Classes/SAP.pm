@@ -64,7 +64,7 @@ sub check_rfc_and_model {
       $params{USER} = $self->opts->username;
     }
     if ($self->opts->password) {
-      $params{PASSWD} = $self->opts->password;
+      $params{PASSWD} = $self->decode_password($self->opts->password);
     }
     if ($self->opts->verbose) {
       $params{DEBUG} = '1';
