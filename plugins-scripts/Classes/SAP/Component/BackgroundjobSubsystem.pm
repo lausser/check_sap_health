@@ -1,5 +1,5 @@
 package Classes::SAP::Component::BackgroundjobSubsystem;
-our @ISA = qw(GLPlugin::Item);
+our @ISA = qw(Monitoring::GLPlugin::Item);
 use strict;
 
 sub session {
@@ -83,7 +83,7 @@ sub check {
 }
 
 package Job;
-our @ISA = qw(GLPlugin::TableItem);
+our @ISA = qw(Monitoring::GLPlugin::TableItem);
 use strict;
 use Date::Manip::Date;
 

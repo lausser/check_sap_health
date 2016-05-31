@@ -64,7 +64,7 @@ sub check_rfc_and_model {
       $params{USER} = $self->opts->username;
     }
     if ($self->opts->password) {
-      $params{PASSWD} = $self->opts->password;
+      $params{PASSWD} = $self->decode_password($self->opts->password);
     }
     if ($self->opts->verbose) {
       $params{DEBUG} = '1';
@@ -192,6 +192,11 @@ sub epoch_to_abap_date_and_time {
   my $date = sprintf "%04d%02d%02d", $year + 1900, $mon + 1, $mday;
   my $time = sprintf "%02d%02d%02d", $hour, $min, $sec;
   return ($date, $time);
+}
+
+sub compatibility_methods {
+  my ($self) = @_;
+  # there are no old-style extensions out there
 }
 
 sub DESTROY {

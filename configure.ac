@@ -1,8 +1,9 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_REVISION ($Revision: 1.150 $)
 AC_PREREQ(2.58)
-AC_INIT(check_sap_health,1.5.1.1)
-AM_INIT_AUTOMAKE([tar-pax])
+AC_INIT(check_sap_health,1.7)
+AM_INIT_AUTOMAKE([1.9 tar-pax])
+AM_MAINTAINER_MODE([disable])
 AC_CANONICAL_HOST
 
 RELEASE=1
@@ -37,15 +38,6 @@ AC_SUBST(with_nagios_user)
 AC_SUBST(with_nagios_group)
 INSTALL_OPTS="-o $with_nagios_user -g $with_nagios_group"
 AC_SUBST(INSTALL_OPTS)
-AC_ARG_ENABLE([perfdata],
-[  --enable-perfdata       wether to output perfdata (default=no)], ,enable_perfdata=no)
-AC_ARG_ENABLE([extendedinfo],
-[  --enable-extendedinfo   wether to output extended info (default=no)], ,enable_extendedinfo=no)
-if test x"$enable_extendedinfo" = xyes ; then
-  AC_SUBST(EXTENDEDINFO, 1)
-else
-  AC_SUBST(EXTENDEDINFO, 0)
-fi
 
 EXTRAS=
 dnl PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/etc:/usr/local/bin:/usr/local/sbin:$PATH
@@ -61,9 +53,13 @@ AC_ARG_WITH(perl,
   with_perl=$withval,with_perl=$PERL)
 AC_SUBST(PERL, $with_perl)
 
-AC_OUTPUT(Makefile plugins-scripts/Makefile plugins-scripts/subst doc/Makefile)
+AC_ARG_ENABLE([standalone],
+    AS_HELP_STRING([--disable-standalone], [Disable feature standalone]))
+AM_CONDITIONAL([DISABLE_STANDALONE], [test "$enable_standalone" = "no"])
+
+AC_OUTPUT(Makefile plugins-scripts/Makefile plugins-scripts/subst)
 
 ACX_FEATURE([with],[perl])
 ACX_FEATURE([with],[nagios-user])
 ACX_FEATURE([with],[nagios-group])
-ACX_FEATURE([enable],[extendedinfo])
+ACX_FEATURE([disable],[standalone], $disable_standalone)

@@ -1,5 +1,5 @@
 package Classes::SAP::Component::UpdateSubsystem;
-our @ISA = qw(GLPlugin::Item);
+our @ISA = qw(Monitoring::GLPlugin::Item);
 use strict;
 
 sub session {
