@@ -172,7 +172,8 @@ sub init {
               }
             }
             my ($code, $message) = $self->check_messages();
-            printf "\n";
+            printf "%s - %s%s\n", $self->status_code($code), $message, $self->perfdata_string() ? " | ".$self->perfdata_string() : "";
+            $self->suppress_messages();
             printf "%s", $self->table_ascii($table, \@titles);
             printf "\n";
           }
