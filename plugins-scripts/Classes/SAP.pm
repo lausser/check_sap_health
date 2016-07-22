@@ -4,6 +4,7 @@ our @ISA = qw(Classes::Device);
 use strict;
 use File::Basename;
 use Time::HiRes;
+use Time::Local;
 use Digest::MD5 qw(md5_hex);
 use Data::Dumper;
 use AutoLoader;
@@ -143,6 +144,11 @@ sub init {
     $self->analyze_and_check_snap_subsystem("Classes::SAP::Component::UpdateSubsystem");
   } elsif ($self->mode =~ /^server::backgroundjobs::/) {
     $self->analyze_and_check_snap_subsystem("Classes::SAP::Component::BackgroundjobSubsystem");
+  } elsif ($self->mode =~ /^server::processes::/) {
+    $self->analyze_and_check_proc_subsystem("Classes::SAP::Component::ProcessSubsystem");
+  } elsif ($self->mode =~ /^server::idocs::/) {
+    $self->analyze_and_check_proc_subsystem("Classes::SAP::Component::IdocSubsystem");
+    $self->reduce_messages_short('no idoc problems');
   }
 }
 
@@ -194,13 +200,49 @@ sub epoch_to_abap_date_and_time {
   return ($date, $time);
 }
 
+sub abap_date_and_time_to_epoch {
+  my ($self, $date, $time) = @_;
+  $date =~ /(\d\d\d\d)(\d\d)(\d\d)/;
+  my ($year, $mon, $mday) = ($1, $2, $3);
+  $time =~ /(\d\d)(\d\d)(\d\d)/;
+  my ($hour, $min, $sec) = ($1, $2, $3);
+  return timelocal($sec, $min, $hour, $mday, $mon, $year);
+}
+
 sub compatibility_methods {
   my ($self) = @_;
   # there are no old-style extensions out there
 }
 
-sub DESTROY {
+sub rstrip {
   my $self = shift;
+  my $message = shift;
+  $message =~ s/\s+$//g;
+  chomp $message;
+  return $message;
+}
+
+sub strip {
+  my $self = shift;
+  my $message = shift;
+  if (ref($message) eq "HASH") {
+    foreach (keys %{$message}) {
+      $self->strip($message->{$_});
+    }
+  } else {
+    $message =~ s/^\s+//g;
+    $message = $self->rstrip($message);
+  }
+  return $message;
+}
+
+sub DESTROY {
+  my ($self) = @_;
+  if (ref($self) ne "Classes::SAP") {
+    return;
+    # Dieses DESTROY wird auch von irgendwelchen schwindligen Erbschleichern
+    # aufgerufen, die mir hier die Session womoeglich zumachen.
+  }
   my $plugin_exit = $?;
   if ($Classes::SAP::session) {
     $Classes::SAP::session->disconnect();
