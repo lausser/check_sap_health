@@ -107,14 +107,14 @@ sub finish {
 sub check {
   my ($self) = @_;
   if ($self->mode =~ /server::idocs::list/) {
-    printf "%s;%s;%s;%s;%s;%s;%s;%s;%s\n",
+    printf "%s;%s;%s;%s;%s;%s;%s;%s;%s;%s\n",
         $self->{MANDT}, $self->{DOCNUM}, $self->{LOGDAT},
-        $self->{LOGTIM}, $self->{STATUS}, $self->{STATUSDESCRP}, $self->{UNAME},
-        $self->{REPID}, $self->{STATXT}, $self->{STATYP};
+        $self->{LOGTIM}, $self->{STATUS}, $self->{STATUSDESCRP},
+        $self->{UNAME}, $self->{REPID}, $self->{STATXT}, $self->{STATYP};
   } elsif ($self->mode =~ /server::idocs::failed/) {
     $self->add_info(sprintf "idoc %s has status \"%s\" (%s) at %s",
         $self->{DOCNUM}, $self->{STATUSDESCRP}, $self->{STATYPLONG}, 
-        scalar localtime $self->{TIMESTAMP}, $self->{STATYPLONG});
+        scalar localtime $self->{TIMESTAMP});
     if ($self->{STATYP} eq "A") {
       $self->add_ok();
     } elsif ($self->{STATYP} eq "W") {
