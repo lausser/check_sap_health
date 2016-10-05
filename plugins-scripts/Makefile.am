@@ -1,5 +1,6 @@
 libexec_SCRIPTS=check_sap_health
 GL_MODULES=\
+  ../GLPlugin/lib/Monitoring/GLPlugin/Commandline/Extraopts.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/Commandline/Getopt.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/Commandline.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin.pm \
@@ -7,10 +8,14 @@ GL_MODULES=\
   ../GLPlugin/lib/Monitoring/GLPlugin/TableItem.pm
 EXTRA_MODULES=\
   Classes/SAP.pm \
+  Classes/SAP/Item.pm \
+  Classes/SAP/TableItem.pm \
   Classes/SAP/Component/CCMS.pm \
   Classes/SAP/Component/SNAP.pm \
   Classes/SAP/Component/UpdateSubsystem.pm \
   Classes/SAP/Component/BackgroundjobSubsystem.pm \
+  Classes/SAP/Component/ProcessSubsystem.pm \
+  Classes/SAP/Component/IdocSubsystem.pm \
   Classes/Device.pm
 
 SED=/bin/sed

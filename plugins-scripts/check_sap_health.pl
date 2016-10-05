@@ -69,7 +69,7 @@ $plugin->add_mode(
 $plugin->add_mode(
     internal => 'server::snap::shortdumps::list',
     spec => 'shortdumps-list',
-    alias => undef,
+    alias => ['list-shortdumps'],
     help => 'Read the SNAP table and list the short dumps',
 );
 $plugin->add_mode(
@@ -103,16 +103,34 @@ $plugin->add_mode(
     help => 'Looks for jobs in the TBTCO table which failed or exceeded a certain runtime (since last run or in the interval specified by --lookback)',
 );
 $plugin->add_mode(
-    internal => 'server::snap::list',
-    spec => 'list-shortdumps',
+    internal => 'server::processes::count',
+    spec => 'count-processes',
     alias => undef,
-    help => 'Read the SNAP table and list the short dumps',
+    help => 'count the types of work processes',
+);
+$plugin->add_mode(
+    internal => 'server::idocs::failed',
+    spec => 'failed-idocs',
+    alias => undef,
+    help => 'Looks for failed IDoc-status-records in the EDIDS table',
+);
+$plugin->add_mode(
+    internal => 'server::processes::list',
+    spec => 'list-processes',
+    alias => undef,
+    help => 'List the running work processes',
 );
 $plugin->add_mode(
     internal => 'server::backgroundjobs::list',
     spec => 'list-jobs',
     alias => undef,
     help => 'Read the TBTCO table and list the jobs',
+);
+$plugin->add_mode(
+    internal => 'server::idocs::list',
+    spec => 'list-idocs',
+    alias => undef,
+    help => 'Lists IDoc-status-records in the EDIDS table',
 );
 $plugin->add_arg(
     spec => 'ashost|H=s',
