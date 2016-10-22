@@ -206,7 +206,7 @@ sub abap_date_and_time_to_epoch {
   my ($year, $mon, $mday) = ($1, $2, $3);
   $time =~ /(\d\d)(\d\d)(\d\d)/;
   my ($hour, $min, $sec) = ($1, $2, $3);
-  return timelocal($sec, $min, $hour, $mday, $mon, $year);
+  return timelocal($sec, $min, $hour, $mday, $mon - 1, $year);
 }
 
 sub compatibility_methods {

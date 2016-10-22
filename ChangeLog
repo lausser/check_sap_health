@@ -1,3 +1,5 @@
+* 2016-10-23 1.9.0.2
+  fix a bug in idoc date output
 * 2016-07-25 1.9.0.1
   fix output of list-idocs
 * 2016-07-22 1.9
