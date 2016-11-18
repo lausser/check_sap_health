@@ -163,15 +163,19 @@ sub validate_args {
 sub create_statefile {
   my $self = shift;
   my %params = @_;
-  my $extension = "";
+  my ($extension, $ashost) = "";
   $extension .= $params{name} ? '_'.$params{name} : '';
   $extension =~ s/\//_/g;
   $extension =~ s/\(/_/g;
   $extension =~ s/\)/_/g;
   $extension =~ s/\*/_/g;
   $extension =~ s/\s/_/g;
+  
+  $ashost = $self->opts->ashost;
+  $ashost =~ s/\//_/g;
+  
   return sprintf "%s/%s_%s_%s%s", $self->statefilesdir(),
-      $self->opts->ashost, $self->opts->sysnr, $self->opts->mode, lc $extension;
+      $ashost, $self->opts->sysnr, $self->opts->mode, lc $extension;
 }
 
 sub epoch_to_abap_date {
