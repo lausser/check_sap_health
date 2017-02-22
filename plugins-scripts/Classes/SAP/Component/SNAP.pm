@@ -148,6 +148,35 @@ sub init {
             printf "%s", $self->table_ascii($table, \@titles);
             printf "ASCII_NOTIFICATION_END\n-->\n";
           }
+          if ($self->opts->report eq "ascii") {
+            if ($self->mode =~ /server::snap::shortdumps::count/) {
+              @titles = qw(datum uzeit ahost uname mandt error program);
+              foreach my $shortdump (@shortdumps) {
+                push(@{$table}, [map { [$shortdump->{$_}, 2] } @titles]);
+              }
+            } elsif ($self->mode =~ /server::snap::shortdumps::recurrence/) {
+              @titles = qw(count ahost uname mandt error program);
+              foreach my $unique_dump (map { 
+                  $unique_dumps->{$_}
+              } reverse sort {
+                  $unique_dumps->{$a}->{count} <=> $unique_dumps->{$b}->{count} 
+              } keys %{$unique_dumps}) {
+                my $level = $self->check_thresholds(value => $num_shortdumps, metric => 'shortdumps') ?
+                    $self->check_thresholds(value => $num_shortdumps, metric => 'shortdumps') :
+                    $self->check_thresholds(value => $unique_dump->{count}, metric => 'max_unique_shortdumps');
+                my @line = ([$unique_dump->{count}, $level]);
+                push(@line, map {
+                    [$unique_dump->{dump}->{$_}, $level]
+                } qw(ahost uname mandt error program));
+                push(@{$table}, \@line);
+              }
+            }
+            my ($code, $message) = $self->check_messages();
+            printf "%s - %s%s\n", $self->status_code($code), $message, $self->perfdata_string() ? " | ".$self->perfdata_string() : "";
+            $self->suppress_messages();
+            printf "%s", $self->table_ascii($table, \@titles);
+            printf "\n";
+          }
         }
       }
       $self->save_state( name => "to", save => {to => $now} );
