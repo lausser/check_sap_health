@@ -9,8 +9,8 @@ sub classify {
   if (! ($self->opts->ashost || $self->opts->mshost)) {
     $self->add_unknown('specify at least hostname, username and password');
   } else {
-    bless $self, 'Classes::SAP';
-    $self->debug('using Classes::SAP');
+    bless $self, 'Classes::SAP::Netweaver';
+    $self->debug('using Classes::SAP::Netweaver');
     $self->check_rfc_and_model();
   }
   if ($self->opts->mode =~ /^my-/) {

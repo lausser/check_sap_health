@@ -1,5 +1,5 @@
-package Classes::SAP::Component::IdocSubsystem;
-our @ISA = qw(Monitoring::GLPlugin::SAP::Item);
+package Classes::SAP::Netweaver::Component::IdocSubsystem;
+our @ISA = qw(Monitoring::GLPlugin::SAP::Netweaver::Item);
 use strict;
 
 sub init {
@@ -78,7 +78,7 @@ sub init {
 }
 
 package IdocStatus;
-our @ISA = qw(Monitoring::GLPlugin::SAP::TableItem);
+our @ISA = qw(Monitoring::GLPlugin::SAP::Netweaver::TableItem);
 use strict;
 
 sub finish {
@@ -132,6 +132,6 @@ sub check {
   
 sub session {
   my $self = shift;
-  return $Classes::SAP::session;
+  return $Classes::SAP::Netweaver::session;
 }
 

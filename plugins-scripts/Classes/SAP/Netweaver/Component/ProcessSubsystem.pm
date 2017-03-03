@@ -1,10 +1,10 @@
-package Classes::SAP::Component::ProcessSubsystem;
+package Classes::SAP::Netweaver::Component::ProcessSubsystem;
 our @ISA = qw(Monitoring::GLPlugin::Item);
 use strict;
 
 sub session {
   my $self = shift;
-  return $Classes::SAP::session;
+  return $Classes::SAP::Netweaver::session;
 }
 
 sub init {

@@ -1,19 +1,19 @@
-package Classes::SAP::Component::BackgroundjobSubsystem;
+package Classes::SAP::Netweaver::Component::BackgroundjobSubsystem;
 our @ISA = qw(Monitoring::GLPlugin::Item);
 use strict;
 
 sub session {
   my $self = shift;
-  return $Classes::SAP::session;
+  return $Classes::SAP::Netweaver::session;
 }
 
 sub init {
   my $self = shift;
   {
     no strict 'refs';
-    *{'Classes::SAP::Component::BackgroundjobSubsystem::epoch_to_abap_date'} = \&{'Classes::SAP::epoch_to_abap_date'};
-    *{'Classes::SAP::Component::BackgroundjobSubsystem::epoch_to_abap_time'} = \&{'Classes::SAP::epoch_to_abap_time'};
-    *{'Classes::SAP::Component::BackgroundjobSubsystem::epoch_to_abap_date_and_time'} = \&{'Classes::SAP::epoch_to_abap_date_and_time'};
+    *{'Classes::SAP::Netweaver::Component::BackgroundjobSubsystem::epoch_to_abap_date'} = \&{'Classes::SAP::Netweaver::epoch_to_abap_date'};
+    *{'Classes::SAP::Netweaver::Component::BackgroundjobSubsystem::epoch_to_abap_time'} = \&{'Classes::SAP::Netweaver::epoch_to_abap_time'};
+    *{'Classes::SAP::Netweaver::Component::BackgroundjobSubsystem::epoch_to_abap_date_and_time'} = \&{'Classes::SAP::Netweaver::epoch_to_abap_date_and_time'};
   }
   $self->{jobs} = [];
   eval {

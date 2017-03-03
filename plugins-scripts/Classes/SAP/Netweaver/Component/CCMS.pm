@@ -1,11 +1,11 @@
-package Classes::SAP::Component::CCMS;
+package Classes::SAP::Netweaver::Component::CCMS;
 our @ISA = qw(Monitoring::GLPlugin::Item);
 use strict;
 
 
 sub session {
   my $self = shift;
-  return $Classes::SAP::session;
+  return $Classes::SAP::Netweaver::session;
 }
 
 sub init {
@@ -14,7 +14,7 @@ sub init {
       localtime(time);
   {
     no strict 'refs';
-    *{'Classes::SAP::Component::CCMS::create_statefile'} = \&{'Classes::SAP::create_statefile'};
+    *{'Classes::SAP::Netweaver::Component::CCMS::create_statefile'} = \&{'Classes::SAP::Netweaver::create_statefile'};
   }
   my $bapi_tic = Time::HiRes::time();
   if ($self->mode =~ /server::ccms::/) {

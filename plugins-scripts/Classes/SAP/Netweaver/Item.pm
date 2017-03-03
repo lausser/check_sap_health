@@ -1,5 +1,5 @@
-package Monitoring::GLPlugin::SAP::Item;
-our @ISA = qw(Monitoring::GLPlugin::Item Classes::SAP);
+package Monitoring::GLPlugin::SAP::Netweaver::Item;
+our @ISA = qw(Monitoring::GLPlugin::Item Classes::SAP::Netweaver);
 use strict;
 
 sub session {

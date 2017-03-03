@@ -1,5 +1,5 @@
-package Classes::SAP::Component::WorkloadSubsystem;
-our @ISA = qw(Monitoring::GLPlugin::SAP::Item);
+package Classes::SAP::Netweaver::Component::WorkloadSubsystem;
+our @ISA = qw(Monitoring::GLPlugin::SAP::Netweaver::Item);
 use strict;
 
 sub translate_tasktype {
@@ -84,7 +84,7 @@ sub init {
       }
 #        printf "%s %d %.2f\n", $tasktype, $avg_times->{$tasktype}->{COUNT},
 #            $avg_times->{$tasktype}->{RESPTIAVG};
-      push(@{$self->{tasktypes}}, Task::Task->new(
+      push(@{$self->{tasktypes}}, Classes::SAP::Netweaver::Component::WorkloadSubsystem::Task->new(
           name => $self->translate_tasktype($tasktype),
           count => $avg_times->{$tasktype}->{COUNT},
           avg_response_time => $avg_times->{$tasktype}->{RESPTIAVG},
@@ -105,9 +105,8 @@ sub check {
   }
 }
 
-package Task::Task;
-
-our @ISA = qw(Monitoring::GLPlugin::SAP::TableItem);
+package Classes::SAP::Netweaver::Component::WorkloadSubsystem::Task;
+our @ISA = qw(Monitoring::GLPlugin::SAP::Netweaver::TableItem);
 use strict;
 
 sub check {

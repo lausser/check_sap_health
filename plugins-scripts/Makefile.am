@@ -8,14 +8,15 @@ GL_MODULES=\
   ../GLPlugin/lib/Monitoring/GLPlugin/TableItem.pm
 EXTRA_MODULES=\
   Classes/SAP.pm \
-  Classes/SAP/Item.pm \
-  Classes/SAP/TableItem.pm \
-  Classes/SAP/Component/CCMS.pm \
-  Classes/SAP/Component/SNAP.pm \
-  Classes/SAP/Component/UpdateSubsystem.pm \
-  Classes/SAP/Component/BackgroundjobSubsystem.pm \
-  Classes/SAP/Component/ProcessSubsystem.pm \
-  Classes/SAP/Component/IdocSubsystem.pm \
+  Classes/SAP/Netweaver/Item.pm \
+  Classes/SAP/Netweaver/TableItem.pm \
+  Classes/SAP/Netweaver/Component/CCMS.pm \
+  Classes/SAP/Netweaver/Component/SNAP.pm \
+  Classes/SAP/Netweaver/Component/UpdateSubsystem.pm \
+  Classes/SAP/Netweaver/Component/BackgroundjobSubsystem.pm \
+  Classes/SAP/Netweaver/Component/ProcessSubsystem.pm \
+  Classes/SAP/Netweaver/Component/IdocSubsystem.pm \
+  Classes/SAP/Netweaver/Component/WorkloadSubsystem.pm \
   Classes/Device.pm
 
 SED=/bin/sed
