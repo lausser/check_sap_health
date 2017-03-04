@@ -4,7 +4,7 @@ use strict;
 
 sub session {
   my $self = shift;
-  return $Classes::SAP::session;
+  return $Classes::SAP::Netweaver::session;
 }
 
 sub compatibility_methods {

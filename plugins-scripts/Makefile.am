@@ -8,6 +8,7 @@ GL_MODULES=\
   ../GLPlugin/lib/Monitoring/GLPlugin/TableItem.pm
 EXTRA_MODULES=\
   Classes/SAP.pm \
+  Classes/SAP/Netweaver.pm \
   Classes/SAP/Netweaver/Item.pm \
   Classes/SAP/Netweaver/TableItem.pm \
   Classes/SAP/Netweaver/Component/CCMS.pm \

@@ -1,10 +1,10 @@
-package Monitoring::GLPlugin::SAP::::Netweaver::TableItem;
+package Monitoring::GLPlugin::SAP::Netweaver::TableItem;
 our @ISA = qw(Monitoring::GLPlugin::TableItem Classes::SAP::Netweaver);
 use strict;
 
 sub session {
   my $self = shift;
-  return $Classes::SAP::session;
+  return $Classes::SAP::Netweaver::session;
 }
 
 sub compatibility_methods {

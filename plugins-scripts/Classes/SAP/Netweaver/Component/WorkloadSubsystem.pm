@@ -45,7 +45,7 @@ sub translate_tasktype {
 
 sub init {
   my ($self) = @_;
-  if ($self->mode =~ /server::workload/) {
+  if ($self->mode =~ /netweaver::workload/) {
     $self->{tasktypes} = [];
     my $now = time - 1;
     my ($todate, $totime) = $self->epoch_to_abap_date_and_time($now);
@@ -89,7 +89,6 @@ sub init {
           count => $avg_times->{$tasktype}->{COUNT},
           avg_response_time => $avg_times->{$tasktype}->{RESPTIAVG},
       ));
-      }
       $self->save_state( name => "to", save => {to => $now} );
     };
     if ($@) {

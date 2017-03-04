@@ -31,103 +31,109 @@ $plugin->add_mode(
     help => 'Check the uptime of the device',
 );
 $plugin->add_mode(
-    internal => 'server::connectiontime',
+    internal => 'netweaver::connectiontime',
     spec => 'connection-time',
     alias => undef,
     help => 'Time to connect to the server',
 );
 $plugin->add_mode(
-    internal => 'server::connectiontime::sapinfo',
+    internal => 'netweaver::connectiontime::sapinfo',
     spec => 'sapinfo',
     alias => undef,
     help => 'Time to connect and show system atttributes like sapinfo',
 );
 $plugin->add_mode(
-    internal => 'server::ccms::moniset::list',
+    internal => 'netweaver::ccms::moniset::list',
     spec => 'list-ccms-monitor-sets',
     alias => undef,
     help => 'List all available monitor sets',
 );
 $plugin->add_mode(
-    internal => 'server::ccms::monitor::list',
+    internal => 'netweaver::ccms::monitor::list',
     spec => 'list-ccms-monitors',
     alias => undef,
     help => 'List all monitors (can be restricted to a monitor set with --name)',
 );
 $plugin->add_mode(
-    internal => 'server::ccms::mte::list',
+    internal => 'netweaver::ccms::mte::list',
     spec => 'list-ccms-mtes',
     alias => undef,
     help => 'List all MTEs (must be restricted to a monitor set / monitor with --name/--name2)',
 );
 $plugin->add_mode(
-    internal => 'server::ccms::mte::check',
+    internal => 'netweaver::ccms::mte::check',
     spec => 'ccms-mte-check',
     alias => undef,
     help => 'Check all MTEs (must be restricted to a monitor set / monitor with --name/--name2)',
 );
 $plugin->add_mode(
-    internal => 'server::snap::shortdumps::list',
+    internal => 'netweaver::snap::shortdumps::list',
     spec => 'shortdumps-list',
     alias => ['list-shortdumps'],
     help => 'Read the SNAP table and list the short dumps',
 );
 $plugin->add_mode(
-    internal => 'server::snap::shortdumps::count',
+    internal => 'netweaver::snap::shortdumps::count',
     spec => 'shortdumps-count',
     alias => undef,
     help => 'Read the SNAP table and count the short dumps (can be restricted with --name/--name2 = username/program)',
 );
 $plugin->add_mode(
-    internal => 'server::snap::shortdumps::recurrence',
+    internal => 'netweaver::snap::shortdumps::recurrence',
     spec => 'shortdumps-recurrence',
     alias => undef,
     help => 'Like shortdumps-count, but counts the recurrence of the same errors',
 );
 $plugin->add_mode(
-    internal => 'server::updates::failed',
+    internal => 'netweaver::updates::failed',
     spec => 'failed-updates',
     alias => undef,
     help => 'Counts new entries in the VHDR table (since last run or appeared in the interval specified by --lookback)',
 );
 $plugin->add_mode(
-    internal => 'server::backgroundjobs::failed',
+    internal => 'netweaver::backgroundjobs::failed',
     spec => 'failed-jobs',
     alias => undef,
     help => 'Looks for failed jobs in the TBTCO table (since last run or in the interval specified by --lookback)',
 );
 $plugin->add_mode(
-    internal => 'server::backgroundjobs::runtime',
+    internal => 'netweaver::backgroundjobs::runtime',
     spec => 'exceeded-failed-jobs',
     alias => undef,
     help => 'Looks for jobs in the TBTCO table which failed or exceeded a certain runtime (since last run or in the interval specified by --lookback)',
 );
 $plugin->add_mode(
-    internal => 'server::processes::count',
+    internal => 'netweaver::processes::count',
     spec => 'count-processes',
     alias => undef,
     help => 'count the types of work processes',
 );
 $plugin->add_mode(
-    internal => 'server::idocs::failed',
+    internal => 'netweaver::workload::overview',
+    spec => 'workload-overview',
+    alias => undef,
+    help => 'Checks response time of task types (like ST03)',
+);
+$plugin->add_mode(
+    internal => 'netweaver::idocs::failed',
     spec => 'failed-idocs',
     alias => undef,
     help => 'Looks for failed IDoc-status-records in the EDIDS table',
 );
 $plugin->add_mode(
-    internal => 'server::processes::list',
+    internal => 'netweaver::processes::list',
     spec => 'list-processes',
     alias => undef,
     help => 'List the running work processes',
 );
 $plugin->add_mode(
-    internal => 'server::backgroundjobs::list',
+    internal => 'netweaver::backgroundjobs::list',
     spec => 'list-jobs',
     alias => undef,
     help => 'Read the TBTCO table and list the jobs',
 );
 $plugin->add_mode(
-    internal => 'server::idocs::list',
+    internal => 'netweaver::idocs::list',
     spec => 'list-idocs',
     alias => undef,
     help => 'Lists IDoc-status-records in the EDIDS table',
