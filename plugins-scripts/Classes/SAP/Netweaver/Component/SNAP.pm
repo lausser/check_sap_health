@@ -1,15 +1,11 @@
 package Classes::SAP::Netweaver::Component::SNAP;
-our @ISA = qw(Monitoring::GLPlugin::Item);
+our @ISA = qw(Classes::SAP::Netweaver::Item);
 use strict;
 
-sub session {
-  my $self = shift;
-  return $Classes::SAP::Netweaver::session;
-}
 
 sub init {
   my $self = shift;
-  if ($self->mode =~ /server::snap::shortdumps/) {
+  if ($self->mode =~ /netweaver::snap::shortdumps/) {
     eval {
       my $now = time - 1;
       my($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) =
@@ -70,13 +66,13 @@ sub init {
         $self->add_ok(sprintf "no new shortdumps between %s %s and %s %s",
             $fromdate, $fromtime, $todate, $totime);
       } else {
-        if ($self->mode =~ /server::snap::shortdumps::list/) {
+        if ($self->mode =~ /netweaver::snap::shortdumps::list/) {
           foreach my $row (@rows) {
             (my $dump = $row->{WA}) =~ s/\s+$//;
             $dump = join(";", map { s/^\s+//; s/\s+$//; $_ } split(";", $dump));
             printf "%s\n", $dump;
           }
-        } elsif ($self->mode =~ /server::snap::shortdumps::/) {
+        } elsif ($self->mode =~ /netweaver::snap::shortdumps::/) {
           my $num_shortdumps = scalar(@shortdumps);
           $self->add_info(sprintf "%d new shortdumps appeared between %s %s and %s %s",
               $num_shortdumps, $fromdate, $fromtime, $todate, $totime);
@@ -89,7 +85,7 @@ sub init {
           my $table = [];
           my @titles = ();
           my $unique_dumps = {};
-          if ($self->mode =~ /server::snap::shortdumps::recurrence/) {
+          if ($self->mode =~ /netweaver::snap::shortdumps::recurrence/) {
             my $max_unique_shortdumps = 0;
             my $max_unique_overflows = 0;
             foreach my $shortdump (@shortdumps) {
@@ -116,12 +112,12 @@ sub init {
             );
           }
           if ($self->opts->report eq "html") {
-            if ($self->mode =~ /server::snap::shortdumps::count/) {
+            if ($self->mode =~ /netweaver::snap::shortdumps::count/) {
               @titles = qw(datum uzeit ahost uname mandt error program);
               foreach my $shortdump (@shortdumps) {
                 push(@{$table}, [map { [$shortdump->{$_}, 2] } @titles]);
               }
-            } elsif ($self->mode =~ /server::snap::shortdumps::recurrence/) {
+            } elsif ($self->mode =~ /netweaver::snap::shortdumps::recurrence/) {
               @titles = qw(count ahost uname mandt error program);
               foreach my $unique_dump (map { 
                   $unique_dumps->{$_}

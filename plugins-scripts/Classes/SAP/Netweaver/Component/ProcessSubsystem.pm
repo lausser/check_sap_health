@@ -1,11 +1,7 @@
 package Classes::SAP::Netweaver::Component::ProcessSubsystem;
-our @ISA = qw(Monitoring::GLPlugin::Item);
+our @ISA = qw(Classes::SAP::Netweaver::Item);
 use strict;
 
-sub session {
-  my $self = shift;
-  return $Classes::SAP::Netweaver::session;
-}
 
 sub init {
   my $self = shift;
@@ -20,7 +16,7 @@ sub init {
         WP_STATUS => $_->{WP_STATUS},
     );
   } @{$fc->WPLIST};
-  if ($self->mode =~ /server::processes::count/) {
+  if ($self->mode =~ /netweaver::processes::count/) {
     # Note 39412
     $self->{types} = [qw(DIA UPD UP2 BGD ENQ SPO)];
     $self->{types} = [map {
@@ -40,10 +36,10 @@ sub init {
 
 sub check {
   my $self = shift;
-  if ($self->mode =~ /server::processes::list/) {
+  if ($self->mode =~ /netweaver::processes::list/) {
     $self->SUPER::check();
     $self->add_ok("have fun");
-  } elsif ($self->mode =~ /server::processes::count/) {
+  } elsif ($self->mode =~ /netweaver::processes::count/) {
     foreach my $type (@{$self->{types}}) {
       $self->{num_types}->{$type} = 0 if ! exists $self->{num_types}->{$type};
       my $metric = lc 'num_'.$type;
@@ -64,8 +60,9 @@ sub check {
   }
 }
 
+
 package WorkProc;
-our @ISA = qw(Monitoring::GLPlugin::TableItem);
+our @ISA = qw(Classes::SAP::Netweaver::TableItem);
 use strict;
 
 sub rstrip {
@@ -99,7 +96,7 @@ sub finish {
 
 sub check {
   my $self = shift;
-  if ($self->mode =~ /server::processes::list/) {
+  if ($self->mode =~ /netweaver::processes::list/) {
     printf "%s %s %s\n", $self->{WP_TYP}, $self->{WP_PID}, $self->{WP_STATUS};
   }
 }

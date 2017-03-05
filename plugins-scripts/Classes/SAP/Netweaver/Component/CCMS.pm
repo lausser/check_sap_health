@@ -1,23 +1,14 @@
 package Classes::SAP::Netweaver::Component::CCMS;
-our @ISA = qw(Monitoring::GLPlugin::Item);
+our @ISA = qw(Classes::SAP::Netweaver::Item);
 use strict;
 
-
-sub session {
-  my $self = shift;
-  return $Classes::SAP::Netweaver::session;
-}
 
 sub init {
   my $self = shift;
   my($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) =
       localtime(time);
-  {
-    no strict 'refs';
-    *{'Classes::SAP::Netweaver::Component::CCMS::create_statefile'} = \&{'Classes::SAP::Netweaver::create_statefile'};
-  }
   my $bapi_tic = Time::HiRes::time();
-  if ($self->mode =~ /server::ccms::/) {
+  if ($self->mode =~ /netweaver::ccms::/) {
     eval {
       my $rcb = $self->session->function_lookup("SXMI_VERSIONS_GET");
       my $tsl = $rcb->create_function_call;
@@ -37,7 +28,7 @@ sub init {
       $fc->parameter('VERSION')->value($xalversion);
       $fc->invoke;
       if ($fc->RETURN->{TYPE} !~ /^E/) {
-        if ($self->mode =~ /server::ccms::moniset::list/) {
+        if ($self->mode =~ /netweaver::ccms::moniset::list/) {
           $fl = $self->session->function_lookup("BAPI_SYSTEM_MS_GETLIST");
           $fc = $fl->create_function_call;
           $fc->EXTERNAL_USER_NAME("Agent");
@@ -48,7 +39,7 @@ sub init {
           }
           $self->add_ok("have fun");
 
-        } elsif ($self->mode =~ /server::ccms::monitor::list/) {
+        } elsif ($self->mode =~ /netweaver::ccms::monitor::list/) {
           $fl = $self->session->function_lookup("BAPI_SYSTEM_MON_GETLIST");
           # details with BAPI_SYSTEM_MS_GETDETAILS
           $fc = $fl->create_function_call;
@@ -68,11 +59,11 @@ sub init {
             }
           }
           $self->add_ok("have fun");
-        } elsif ($self->mode =~ /server::ccms::mte::/) {
+        } elsif ($self->mode =~ /netweaver::ccms::mte::/) {
           if (! $self->opts->name || ! $self->opts->name2) {
             die "__no_internals__you need to specify --name moniset --name2 monitor";
           }
-          if ($self->mode =~ /server::ccms::mte::list/) {
+          if ($self->mode =~ /netweaver::ccms::mte::list/) {
             $self->update_tree_cache(1);
           }
           my @tree_nodes = $self->update_tree_cache(0);
@@ -86,11 +77,11 @@ sub init {
           } map { 
               MTE->new(%{$_});
           } @tree_nodes;
-          if ($self->mode =~ /server::ccms::mte::list/) {
+          if ($self->mode =~ /netweaver::ccms::mte::list/) {
             foreach my $mte (@mtes) {
               printf "%s %d\n", $mte->{MTNAMELONG}, $mte->{MTCLASS};
             }
-          } elsif ($self->mode =~ /server::ccms::mte::check/) {
+          } elsif ($self->mode =~ /netweaver::ccms::mte::check/) {
             $self->set_thresholds();
             foreach my $mte (@mtes) {
               next if grep { $mte->{MTCLASS} == $_ } (50, 70, 199);
@@ -190,7 +181,7 @@ sub map_alvalue {
 
 
 package MTE;
-our @ISA = qw(Monitoring::GLPlugin::TableItem);
+our @ISA = qw(Classes::SAP::Netweaver::TableItem);
 use strict;
 
 #our @ISA = qw(SAP::CCMS);

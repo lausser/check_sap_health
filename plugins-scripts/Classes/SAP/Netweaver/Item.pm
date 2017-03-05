@@ -1,10 +1,11 @@
-package Monitoring::GLPlugin::SAP::Netweaver::Item;
-our @ISA = qw(Monitoring::GLPlugin::Item Classes::SAP::Netweaver);
+package Classes::SAP::Netweaver::Item;
+#our @ISA = qw(Monitoring::GLPlugin::Item Classes::SAP::Netweaver);
+our @ISA = qw(Classes::SAP::Netweaver Monitoring::GLPlugin::Item);
 use strict;
 
-sub session {
-  my $self = shift;
-  return $Classes::SAP::Netweaver::session;
+{
+  no strict 'refs';
+  *{'Classes::SAP::Netweaver::Item::new'} = \&{'Monitoring::GLPlugin::Item::new'};
 }
 
 sub compatibility_methods {

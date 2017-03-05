@@ -2,6 +2,7 @@ package Classes::SAP;
 our @ISA = qw(Classes::Device);
 use strict;
 
+
 sub init {
   my $self = shift;
   if ($self->mode =~ /^netweaver/i) {

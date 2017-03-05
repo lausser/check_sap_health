@@ -1,20 +1,10 @@
 package Classes::SAP::Netweaver::Component::BackgroundjobSubsystem;
-our @ISA = qw(Monitoring::GLPlugin::Item);
+our @ISA = qw(Classes::SAP::Netweaver::Item);
 use strict;
 
-sub session {
-  my $self = shift;
-  return $Classes::SAP::Netweaver::session;
-}
 
 sub init {
   my $self = shift;
-  {
-    no strict 'refs';
-    *{'Classes::SAP::Netweaver::Component::BackgroundjobSubsystem::epoch_to_abap_date'} = \&{'Classes::SAP::Netweaver::epoch_to_abap_date'};
-    *{'Classes::SAP::Netweaver::Component::BackgroundjobSubsystem::epoch_to_abap_time'} = \&{'Classes::SAP::Netweaver::epoch_to_abap_time'};
-    *{'Classes::SAP::Netweaver::Component::BackgroundjobSubsystem::epoch_to_abap_date_and_time'} = \&{'Classes::SAP::Netweaver::epoch_to_abap_date_and_time'};
-  }
   $self->{jobs} = [];
   eval {
     my $now = time - 1;
@@ -61,7 +51,7 @@ sub check {
     if (! @{$self->{jobs}}) {
       $self->add_unknown("no finished jobs were found");
     } else {
-      if ($self->mode =~ /server::backgroundjobs::list/) {
+      if ($self->mode =~ /netweaver::backgroundjobs::list/) {
         foreach (@{$self->{jobs}}) {
           printf "%-12s %-32s %s %4d %4d %s\n", $_->{SDLUNAME}, $_->{JOBNAME},
               $_->{output_start}, $_->{runtime}, $_->{delay}, $_->{STATUS};
@@ -69,7 +59,7 @@ sub check {
       } else {
         my $jobs = {};
         map { $jobs->{$_->{JOBNAME}.$_->{SDLUNAME}}++ } @{$self->{jobs}};
-        if ($self->mode =~ /server::backgroundjobs::(failed|runtime)/) {
+        if ($self->mode =~ /netweaver::backgroundjobs::(failed|runtime)/) {
           foreach (@{$self->{jobs}}) {
             $_->check() if (! $self->opts->unique || ($self->opts->unique && ! --$jobs->{$_->{JOBNAME}.$_->{SDLUNAME}}));
           }
@@ -83,7 +73,7 @@ sub check {
 }
 
 package Job;
-our @ISA = qw(Monitoring::GLPlugin::TableItem);
+our @ISA = qw(Classes::SAP::Netweaver::TableItem);
 use strict;
 use Date::Manip::Date;
 
@@ -121,12 +111,12 @@ sub finish {
 
 sub check {
   my $self = shift;
-  if ($self->mode =~ /server::backgroundjobs::(failed|runtime)/) {
+  if ($self->mode =~ /netweaver::backgroundjobs::(failed|runtime)/) {
     if ($self->{STATUS} eq "A") {
       $self->add_critical(sprintf "job %s failed at %s", $self->{JOBNAME}, $self->{output_stop});
     }
   }
-  if ($self->mode =~ /server::backgroundjobs::runtime/) {
+  if ($self->mode =~ /netweaver::backgroundjobs::runtime/) {
     $self->set_thresholds(metric => $self->{SDLUNAME}.'_'.$self->{JOBNAME}.'_runtime',
        warning => 60, critical => 300);
     $self->add_info(sprintf "job %s of user %s ran for %ds",

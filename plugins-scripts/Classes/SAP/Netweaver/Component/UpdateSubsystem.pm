@@ -1,15 +1,11 @@
 package Classes::SAP::Netweaver::Component::UpdateSubsystem;
-our @ISA = qw(Monitoring::GLPlugin::Item);
+our @ISA = qw(Classes::SAP::Netweaver::Item);
 use strict;
 
-sub session {
-  my $self = shift;
-  return $Classes::SAP::Netweaver::session;
-}
 
 sub init {
   my $self = shift;
-  if ($self->mode =~ /server::updates::failed/) {
+  if ($self->mode =~ /netweaver::updates::failed/) {
     eval {
       my $now = time - 1;
       my($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) =

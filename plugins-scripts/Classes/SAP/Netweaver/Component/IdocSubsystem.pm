@@ -1,5 +1,5 @@
 package Classes::SAP::Netweaver::Component::IdocSubsystem;
-our @ISA = qw(Monitoring::GLPlugin::SAP::Netweaver::Item);
+our @ISA = qw(Classes::SAP::Netweaver::Item);
 use strict;
 
 sub init {
@@ -7,7 +7,7 @@ sub init {
   $self->{idocs} = [];
   my %languages = ();
   my %messages = ();
-  if ($self->mode =~ /server::idocs/) {
+  if ($self->mode =~ /netweaver::idocs/) {
     my $now = time - 1;
     my ($todate, $totime) = $self->epoch_to_abap_date_and_time($now);
     my $from = $self->opts->lookback ? $now - $self->opts->lookback :
@@ -78,7 +78,7 @@ sub init {
 }
 
 package IdocStatus;
-our @ISA = qw(Monitoring::GLPlugin::SAP::Netweaver::TableItem);
+our @ISA = qw(Classes::SAP::Netweaver::TableItem);
 use strict;
 
 sub finish {
@@ -106,12 +106,12 @@ sub finish {
 
 sub check {
   my ($self) = @_;
-  if ($self->mode =~ /server::idocs::list/) {
+  if ($self->mode =~ /netweaver::idocs::list/) {
     printf "%s;%s;%s;%s;%s;%s;%s;%s;%s;%s\n",
         $self->{MANDT}, $self->{DOCNUM}, $self->{LOGDAT},
         $self->{LOGTIM}, $self->{STATUS}, $self->{STATUSDESCRP},
         $self->{UNAME}, $self->{REPID}, $self->{STATXT}, $self->{STATYP};
-  } elsif ($self->mode =~ /server::idocs::failed/) {
+  } elsif ($self->mode =~ /netweaver::idocs::failed/) {
     $self->add_info(sprintf "idoc %s has status \"%s\" (%s) at %s",
         $self->{DOCNUM}, $self->{STATUSDESCRP}, $self->{STATYPLONG}, 
         scalar localtime $self->{TIMESTAMP});
@@ -127,11 +127,5 @@ sub check {
       $self->add_ok();
     }
   }
-}
-  
-  
-sub session {
-  my $self = shift;
-  return $Classes::SAP::Netweaver::session;
 }
 
