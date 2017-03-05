@@ -53,12 +53,18 @@ sub init {
         $self->load_state( name => "to" ) ? $self->load_state( name => "to" )->{to} :
         $now - 3600;
     my ($fromdate, $fromtime) = $self->epoch_to_abap_date_and_time($from + 1);
-    my $fl = $self->session->function_lookup("SWNC_GET_WORKLOAD_SNAPSHOT ");
+    my $fl = $self->session->function_lookup("SWNC_GET_WORKLOAD_SNAPSHOT");
     my $fc = $fl->create_function_call;
     $fc->READ_START_DATE($fromdate);
     $fc->READ_START_TIME($fromtime);
     $fc->READ_END_DATE($todate);
     $fc->READ_END_TIME($totime);
+    if ($self->opts->name2) {
+      $fc->SELECT_SERVER($self->opts->name2);
+    }
+    if ($self->opts->name3) {
+      $fc->READ_CLIENT($self->opts->name3);
+    }
     $fc->invoke;
     my $avg_times = {};
     my @types = @{$fc->TASKTYPE};
@@ -84,6 +90,7 @@ sub init {
       }
 #        printf "%s %d %.2f\n", $tasktype, $avg_times->{$tasktype}->{COUNT},
 #            $avg_times->{$tasktype}->{RESPTIAVG};
+      next if ! $self->filter_name($self->translate_tasktype($tasktype));
       push(@{$self->{tasktypes}}, Classes::SAP::Netweaver::Component::WorkloadSubsystem::Task->new(
           name => $self->translate_tasktype($tasktype),
           count => $avg_times->{$tasktype}->{COUNT},
