@@ -168,6 +168,9 @@ sub create_statefile {
   my %params = @_;
   my $extension = "";
   $extension .= $params{name} ? '_'.$params{name} : '';
+  $extension .= $self->opts->name ? '_'.$self->opts->name : '';
+  $extension .= $self->opts->name2 ? '_'.$self->opts->name2 : '';
+  $extension .= $self->opts->name3 ? '_'.$self->opts->name3 : '';
   $extension =~ s/\//_/g;
   $extension =~ s/\(/_/g;
   $extension =~ s/\)/_/g;
