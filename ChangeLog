@@ -1,3 +1,5 @@
+* 2017-03-07 2.0.0.2
+  fix a bug in count-processes & lang=DE. (Thanks Maximilian Scharsich)
 * 2017-03-07 2.0.0.1
   add mitigation for "no mtes"
   clean statefile from special characters

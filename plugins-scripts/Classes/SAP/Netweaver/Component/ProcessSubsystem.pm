@@ -92,6 +92,13 @@ sub finish {
   foreach (qw(WP_TYP WP_PID WP_STATUS)) {
     $self->{$_} = $self->strip($self->{$_});
   }
+  # BTC and BGD are technically the same, it is only a different translation
+  # from German (BTC) to English (BGD).
+  # Depending on the logon language the WP type is either BTC or BGD,
+  # but never both.
+  if ($self->{WP_TYP} eq 'BTC') {
+    $self->{WP_TYP} = 'BGD';
+  }
 }
 
 sub check {
