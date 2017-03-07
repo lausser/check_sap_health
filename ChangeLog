@@ -1,3 +1,6 @@
+* 2017-03-07 2.0.0.1
+  add mitigation for "no mtes"
+  clean statefile from special characters
 * 2017-03-04 2.0
   add workload-overview
 * 2016-10-23 1.9.0.2
