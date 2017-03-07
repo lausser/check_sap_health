@@ -176,6 +176,8 @@ sub create_statefile {
   $extension =~ s/\)/_/g;
   $extension =~ s/\*/_/g;
   $extension =~ s/\s/_/g;
+  $extension =~ s/\//_/g;
+  $extension =~ s/\|/_/g;
   my $target = "";
   $target .= $self->opts->ashost.'_'.$self->opts->sysnr if $self->opts->ashost;
   $target .= $self->opts->mshost if $self->opts->mshost;
@@ -184,7 +186,7 @@ sub create_statefile {
   $target .= $self->opts->group if $self->opts->group;
   $target .= $self->opts->gwhost if $self->opts->gwhost;
   $target .= $self->opts->gwserv if $self->opts->gwserv;
-  $target =~ s/\//_/g;;
+  $target =~ s/\//_/g;
   return sprintf "%s/%s_%s%s", $self->statefilesdir(),
       $target, $self->opts->mode, lc $extension;
 }
