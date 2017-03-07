@@ -90,7 +90,11 @@ sub init {
               $mte->check();
             }
             if (! @mtes) {
-              $self->add_unknown("no mtes");
+              if (defined $self->opts->mitigation()) {
+                $self->add_message($self->opts->mitigation(), 'no mtes');
+              } else {
+                $self->add_unknown("no mtes");
+              }
             }
           }
         }
