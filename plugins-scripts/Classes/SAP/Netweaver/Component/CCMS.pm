@@ -576,7 +576,7 @@ sub check {
   $self->{TEXT} ||= "<empty>";
   $self->add_info($self->{MTNAGIOSNAME}." = ".$self->{TEXT});
   $self->add_ok();
-  if ($self->{TEXT} =~ /([\d\.]+)\s*(s|%|[kmgt]{0,1}b|ms|msec)/) {
+  if ($self->{TEXT} =~ /([\d\.]+)\s*(s|%|[kmgt]{0,1}b|ms|msec)($|\s)/) {
     my $value = $1;
     my $unit = $2;
     $self->add_perfdata(

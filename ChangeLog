@@ -1,3 +1,7 @@
+* 2018-01-29 2.0.0.5
+  update glplugin (--environment)
+* 2018-01-09 2.0.0.4
+  fix a bug in st mtes with units
 * 2017-05-12 2.0.0.3
   update GLPlugin
 * 2017-03-07 2.0.0.2
