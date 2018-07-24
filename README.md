@@ -1,6 +1,10 @@
+**Komm nach Braunschweig und triff die Leute, die sich mit genau demselben Kram beschäftigen wie du!**
+<a href="https://monitors-2018.tu-braunschweig.de/dokuwiki/doku.php"><img src="https://labs.consol.de/assets/images/braunschweig-banner.gif"></a>
 
 #Beschreibung#
 Das Plugin check\_sap_health wurde entwickelt, um ein leicht erweiterbares Werkzeug zu haben, mit dem sich sowohl technische Parameter aus dem CCMS als auch betriebswirtschaftliche Fakten per RFC/BAPI überwachen lassen
+
+<div><a href="https://www.buymeacoffee.com/bsNED0Wct" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/black_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a></div>
 
 # Motivation #
 Die bisher verfügbaren Plugins sind in C geschrieben, wodurch man nicht mal eben ein neues Feature einbauen und ausprobieren kann. Des weiteren beschränken sich die Möglichkeiten dieser Plugins auf die Abfrage von CCMS-Metriken. Als es Mitte 2013 beim bis dahin eingesetzten check\_sap zu Core-Dumps kam (irreparabel, da nach dem exit()-Aufruf) und offenbar die Kompatibilität zu neueren Netweaver-Versionen nicht mehr gewährleistet war, suchte ich nach Alternativen.
