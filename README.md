@@ -1,8 +1,3 @@
-Meet me at...
-=============
-<div><a href="https://monitors2019.consol.de/wiki/doku.php?id=workshop:2019:start" target="_blank"><img src="https://labs.consol.de/assets/images/muenchen-banner.png" alt="Monitoring-Workshop 2019" style="height: auto !important;width: auto !important;" ></a></div>
-
-
 # Beschreibung #
 Das Plugin check\_sap_health wurde entwickelt, um ein leicht erweiterbares Werkzeug zu haben, mit dem sich sowohl technische Parameter aus dem CCMS als auch betriebswirtschaftliche Fakten per RFC/BAPI überwachen lassen
 
