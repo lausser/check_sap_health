@@ -191,12 +191,14 @@ $plugin->add_arg(
     help => '--username
    The username',
     required => 0,
+    decode => "rfc3986",
 );
 $plugin->add_arg(
     spec => 'password=s',
     help => '--password
    The password',
     required => 0,
+    decode => "rfc3986",
 );
 $plugin->add_arg(
     spec => 'client=s',
@@ -247,6 +249,7 @@ if (! $plugin->check_messages()) {
         if $plugin->get_extendedinfo();
   }
 } else {
+  $plugin->set_failed_connection_flag();
   $plugin->add_critical('wrong device');
 }
 my ($code, $message) = $plugin->opts->multiline ?

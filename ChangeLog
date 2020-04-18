@@ -1,3 +1,5 @@
+* 2020-04-18 2.1
+  improve ccms caching, rebuild the cache after a connection problem
 * 2018-01-29 2.0.0.5
   update glplugin (--environment)
 * 2018-01-09 2.0.0.4

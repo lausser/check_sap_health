@@ -65,7 +65,7 @@ sub check_rfc_and_model {
       $params{USER} = $self->opts->username;
     }
     if ($self->opts->password) {
-      $params{PASSWD} = $self->decode_password($self->opts->password);
+      $params{PASSWD} = $self->opts->password;
     }
     if ($self->opts->verbose) {
       $params{DEBUG} = '1';
@@ -104,6 +104,17 @@ sub check_rfc_and_model {
 sub session {
   my $self = shift;
   return $Classes::SAP::Netweaver::session;
+}
+
+sub set_failed_connection_flag {
+  my($self) = @_;
+  my $save_name3 = $self->opts->name3;
+  my $save_mode = $self->opts->mode;
+  $self->override_opt("name3", "");
+  $self->override_opt("mode", "");
+  $self->save_state(name => 'delete_'.$self->opts->name.'_'.$self->opts->name2, save => {});
+  $self->override_opt("name3", $save_name3);
+  $self->override_opt("mode", $save_mode);
 }
 
 sub init {

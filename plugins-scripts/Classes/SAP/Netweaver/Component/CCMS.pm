@@ -135,7 +135,17 @@ sub update_tree_cache {
   my $self = shift;
   my $force = shift;
   my @tree_nodes = ();
+  my $save_name3 = $self->opts->name3;
+  my $save_mode = $self->opts->mode;
+  $self->override_opt("name3", "");
+  $self->override_opt("mode", "");
   my $statefile = $self->create_statefile(name => 'tree_'.$self->opts->name.'_'.$self->opts->name2);
+  my $delete_statefile = $self->create_statefile(name => 'delete_'.$self->opts->name.'_'.$self->opts->name2);
+  if (-f $delete_statefile) {
+    $force = 1;
+    unlink $delete_statefile;
+    $self->debug("we had a connection problem, rebuild the tree cache");
+  }
   my $update = time - 24 * 3600;
   if ($force || ! -f $statefile || ((stat $statefile)[9]) < ($update)) {
     $self->debug(sprintf "updating the tree cache for %s %s",
@@ -165,6 +175,8 @@ sub update_tree_cache {
   @tree_nodes = @{$cache};
   $self->debug(sprintf "return cached tree nodes for %s %s",
       $self->opts->name, $self->opts->name2);
+  $self->override_opt("name3", $save_name3);
+  $self->override_opt("mode", $save_mode);
   return @tree_nodes;
 }
 
