@@ -1,7 +1,9 @@
-**Komm nach Braunschweig und triff die Leute, die sich mit genau demselben Kram beschäftigen wie du!**
-<a href="https://monitors-2018.tu-braunschweig.de/dokuwiki/doku.php"><img src="https://labs.consol.de/assets/images/braunschweig-banner.gif"></a>
+Meet me at...
+=============
+<div><a href="https://monitors2019.consol.de/wiki/doku.php?id=workshop:2019:start" target="_blank"><img src="https://labs.consol.de/assets/images/muenchen-banner.png" alt="Monitoring-Workshop 2019" style="height: auto !important;width: auto !important;" ></a></div>
 
-#Beschreibung#
+
+# Beschreibung #
 Das Plugin check\_sap_health wurde entwickelt, um ein leicht erweiterbares Werkzeug zu haben, mit dem sich sowohl technische Parameter aus dem CCMS als auch betriebswirtschaftliche Fakten per RFC/BAPI überwachen lassen
 
 <div><a href="https://www.buymeacoffee.com/bsNED0Wct" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/black_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a></div>
