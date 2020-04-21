@@ -140,7 +140,7 @@ sub update_tree_cache {
   $self->override_opt("name3", "");
   $self->override_opt("mode", "");
   my $statefile = $self->create_statefile(name => 'tree_'.$self->opts->name.'_'.$self->opts->name2);
-  my $delete_statefile = $self->create_statefile(name => 'delete_'.$self->opts->name.'_'.$self->opts->name2);
+  my $delete_statefile = $self->create_statefile(name => 'connection_failed');
   if (-f $delete_statefile) {
     $force = 1;
     unlink $delete_statefile;

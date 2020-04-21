@@ -1,3 +1,5 @@
+* 2020-04-21 2.1.0.1
+  fix a bug in the connect-fail-flag-file
 * 2020-04-18 2.1
   improve ccms caching, rebuild the cache after a connection problem
 * 2018-01-29 2.0.0.5

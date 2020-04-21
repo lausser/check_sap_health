@@ -112,7 +112,7 @@ sub set_failed_connection_flag {
   my $save_mode = $self->opts->mode;
   $self->override_opt("name3", "");
   $self->override_opt("mode", "");
-  $self->save_state(name => 'delete_'.$self->opts->name.'_'.$self->opts->name2, save => {});
+  $self->save_state(name => 'connection_failed');
   $self->override_opt("name3", $save_name3);
   $self->override_opt("mode", $save_mode);
 }
