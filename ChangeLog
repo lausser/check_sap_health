@@ -1,3 +1,5 @@
+* 2020-04-30 2.1.0.2
+  fix another bug in the connect-fail-flag-file and mte-cache refresh
 * 2020-04-21 2.1.0.1
   fix a bug in the connect-fail-flag-file
 * 2020-04-18 2.1

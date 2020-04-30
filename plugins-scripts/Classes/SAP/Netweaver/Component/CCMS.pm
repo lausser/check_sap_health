@@ -66,7 +66,8 @@ sub init {
           if ($self->mode =~ /netweaver::ccms::mte::list/) {
             $self->update_tree_cache(1);
           }
-          my @tree_nodes = $self->update_tree_cache(0);
+          my $update = $self->update_tree_cache(0);
+          my @tree_nodes = @{$update->{tree_nodes}};
           my %seen;
           my @mtes = sort {
               $a->{MTNAMELONG} cmp $b->{MTNAMELONG}
@@ -94,6 +95,12 @@ sub init {
                 $self->add_message($self->opts->mitigation(), 'no mtes');
               } else {
                 $self->add_unknown("no mtes");
+                my $statefile = $update->{statefile};
+                if (-f $statefile) {
+                  $self->add_unknown(sprintf "(%d tree nodes, age %ds, size %d, inode %s, %s)", scalar(@tree_nodes),
+                      time - (stat($statefile))[9], (stat($statefile))[7],
+                      (stat($statefile))[1], $statefile);
+                }
               }
             }
           }
@@ -143,7 +150,8 @@ sub update_tree_cache {
   my $delete_statefile = $self->create_statefile(name => 'connection_failed');
   if (-f $delete_statefile) {
     $force = 1;
-    unlink $delete_statefile;
+    # do not delete the deletefile yet, others might think that the
+    # statefile is valid
     $self->debug("we had a connection problem, rebuild the tree cache");
   }
   my $update = time - 24 * 3600;
@@ -177,7 +185,13 @@ sub update_tree_cache {
       $self->opts->name, $self->opts->name2);
   $self->override_opt("name3", $save_name3);
   $self->override_opt("mode", $save_mode);
-  return @tree_nodes;
+  if (-f $delete_statefile && $force) {
+    unlink $delete_statefile;
+  }
+  return {
+      tree_nodes => \@tree_nodes,
+      statefile => $statefile,
+  };
 }
 
 sub map_alvalue {
