@@ -108,11 +108,17 @@ sub session {
 
 sub set_failed_connection_flag {
   my($self) = @_;
+  my $save_name = $self->opts->name;
+  my $save_name2 = $self->opts->name2;
   my $save_name3 = $self->opts->name3;
   my $save_mode = $self->opts->mode;
+  $self->override_opt("name", "");
+  $self->override_opt("name2", "");
   $self->override_opt("name3", "");
   $self->override_opt("mode", "");
   $self->save_state(name => 'connection_failed');
+  $self->override_opt("name", $save_name);
+  $self->override_opt("name2", $save_name2);
   $self->override_opt("name3", $save_name3);
   $self->override_opt("mode", $save_mode);
 }

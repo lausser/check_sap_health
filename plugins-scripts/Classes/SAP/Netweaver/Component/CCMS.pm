@@ -142,17 +142,30 @@ sub update_tree_cache {
   my $self = shift;
   my $force = shift;
   my @tree_nodes = ();
+  my $save_name = $self->opts->name;
+  my $save_name2 = $self->opts->name2;
   my $save_name3 = $self->opts->name3;
   my $save_mode = $self->opts->mode;
+  $self->override_opt("name", "");
+  $self->override_opt("name2", "");
   $self->override_opt("name3", "");
   $self->override_opt("mode", "");
-  my $statefile = $self->create_statefile(name => 'tree_'.$self->opts->name.'_'.$self->opts->name2);
   my $delete_statefile = $self->create_statefile(name => 'connection_failed');
+  $self->override_opt("name", $save_name);
+  $self->override_opt("name2", $save_name2);
+  my $statefile = $self->create_statefile(name => 'tree');
   if (-f $delete_statefile) {
     $force = 1;
-    # do not delete the deletefile yet, others might think that the
-    # statefile is valid
     $self->debug("we had a connection problem, rebuild the tree cache");
+    # here we delete all the ccms tree caches
+    # if every name/name2 would do it on it's own, we would never know
+    # when all of them have deleted their cache, so there would be no
+    # criteria for deleting the delete_statefile
+    my $delete_the_trees = $delete_statefile;
+    $delete_the_trees =~ s/__connection_failed$/__tree_\*/;
+    eval {
+      unlink glob $delete_the_trees;
+    };
   }
   my $update = time - 24 * 3600;
   if ($force || ! -f $statefile || ((stat $statefile)[9]) < ($update)) {
@@ -174,7 +187,7 @@ sub update_tree_cache {
     }
     $self->debug(sprintf "updated the tree cache for %s %s",
         $self->opts->name, $self->opts->name2);
-    $self->save_state(name => 'tree_'.$self->opts->name.'_'.$self->opts->name2, save => \@tree_nodes);
+    $self->save_state(name => 'tree', save => \@tree_nodes);
   }
   my $content = do { local (@ARGV, $/) = $statefile; my $x = <>; close ARGV; $x };
   my $VAR1;
