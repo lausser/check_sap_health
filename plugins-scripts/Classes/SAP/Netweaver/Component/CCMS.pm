@@ -102,6 +102,67 @@ sub init {
                       (stat($statefile))[1], $statefile);
                 }
               }
+              my $successfile = $self->create_statefile(name => 'success');
+              if (-f $successfile) {
+                my $maxlastsuccess = time - 4 * 3600;
+                if (((stat $successfile)[9]) > $maxlastsuccess) {
+                  $self->debug(sprintf "last OK was %ds ago",
+                      time - ((stat $successfile)[9]));
+                  # Letztes OK-Ergebnis liegt nicht laenger als 4h zurueck.
+                  # Dann gehen wir davon aus, daß --name3 existiert und
+                  # das Cachefile kaputt ist.
+                  $self->discard_tree_cache();
+                } else {
+                  $self->debug("looks like there was never an OK for this mode");
+                  # Mittlerweile muesste der Cache x Mal neu erstellt worden
+                  # sein, wahrscheinlich gibts die gewuenschten MTE
+                  # tatsaechlich nicht.
+                  unlink $successfile;
+                }
+              }
+            } else {
+              # obiger Fall mit den leeren MTEs kann vorkommen, wenn die
+              # Cachedatei nicht sonderlich valide ist, wenn nach einem
+              # Reboot o.ae. der BAPI_SYSTEM_MON_GETTREE Elemente liefert.
+              # Beispiel:
+              # -    'VMSEGNAME' => '                                        ',
+              # -    'ACTUALVAL' => 0,
+              # -    'DUMMYALIGN' => '  ',
+              # -    'MTNAMESHRT' => 'P56 : MTE Class CCMS_UpdateStatusClass :',
+              # -    'TDSTATUS' => 0,
+              # -    'VALINDEX' => '          ',
+              # -    'ACTUALSEV' => 0,
+              # -    'ALIDXINTRE' => 89,
+              # -    'VALERTDATE' => '00000000',
+              # -    'EXTINDEX' => '        1-',
+              # -    'CUSGRPNAME' => '                                        ',
+              # -    'VALERTTIME' => '000000',
+              # -    'MTNUMRANGE' => ' 1-',
+              # -    'ALERTTIME' => '000000',
+              # +    'VMSEGNAME' => 'SAP_CCMS_bgp56as12_P56_56               ',
+              # +    'ACTUALVAL' => 1,
+              # +    'DUMMYALIGN' => '  ',
+              # +    'MTNAMESHRT' => 'Update Status                           ',
+              # +    'TDSTATUS' => 20,
+              # +    'VALINDEX' => '000000001-',
+              # +    'ACTUALSEV' => 50,
+              # +    'ALIDXINTRE' => 89,
+              # +    'VALERTDATE' => '20200702',
+              # +    'EXTINDEX' => '0000000055',
+              # +    'CUSGRPNAME' => 'CCMS_UpdateStatusClass                  ',
+              # +    'VALERTTIME' => '122718',
+              # +    'MTNUMRANGE' => '004',
+              # +    'ALERTTIME' => '122718',
+              # Obige Suche mit $self->filter_name3($_->{MTNAMELONG})
+              # laeuft ins Leere. Jetzt koennte man eine weitere Datei schreiben
+              # mit lastSeen-Zeiten fuer erfolgreich gefundene MTEs, aber
+              # --name3 kann auch ein Regexp sein und was da an MTEs eigentlich
+              # in @mtes stehen muesste, das weiss man erst nach dem Filtern.
+              # Also wird einfach eine Datei geschrieben, die --name3 im Namen
+              # hat. Damit und mit ihrem modification date weiss man, wann
+              # dieser Plugin-Aufruf zuletzt geklappt hat. Wenn ja und innerhalb
+              # der letzten vier Stunden, dann fliegt die Cachedatei raus.
+              $self->save_state(name => 'success', save => []);
             }
           }
         }
@@ -136,6 +197,20 @@ sub init {
   #    warning => $self->{warning},
   #    critical => $self->{critical},
   #);
+}
+
+sub discard_tree_cache {
+  my $self = shift;
+  my $save_name3 = $self->opts->name3;
+  my $save_mode = $self->opts->mode;
+  $self->override_opt("name3", "");
+  $self->override_opt("mode", "");
+  my $statefile = $self->create_statefile(name => 'tree');
+  $self->override_opt("name3", $save_name3);
+  $self->override_opt("mode", $save_mode);
+  eval {
+    unlink $statefile;
+  };
 }
 
 sub update_tree_cache {
@@ -189,10 +264,7 @@ sub update_tree_cache {
         $self->opts->name, $self->opts->name2);
     $self->save_state(name => 'tree', save => \@tree_nodes);
   }
-  my $content = do { local (@ARGV, $/) = $statefile; my $x = <>; close ARGV; $x };
-  my $VAR1;
-  $VAR1 = eval "$content";
-  my $cache = $VAR1;;
+  my $cache = $self->load_state(name => 'tree');
   @tree_nodes = @{$cache};
   $self->debug(sprintf "return cached tree nodes for %s %s",
       $self->opts->name, $self->opts->name2);
