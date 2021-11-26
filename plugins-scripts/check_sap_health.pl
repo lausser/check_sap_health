@@ -103,7 +103,7 @@ $plugin->add_mode(
     help => 'Looks for jobs in the TBTCO table which failed or exceeded a certain runtime (since last run or in the interval specified by --lookback)',
 );
 $plugin->add_mode(
-    internal => 'netweaver::backgroundjobs::runtime-running',
+    internal => 'netweaver::backgroundjobs::running-runtime',
     spec => 'exceeded-running-jobs',
     alias => undef,
     help => 'Looks for jobs in the TBTCO table currently running which exceeded a certain runtime (since last run or in the interval specified by --lookback)',
