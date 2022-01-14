@@ -23,7 +23,7 @@ sub init {
       my $fc = $fl->create_function_call;
       $fc->QUERY_TABLE("SNAP");
       $fc->DELIMITER(";");
-      my $condition = sprintf "SEQNO = '000' AND ( DATUM > '%s' OR ( DATUM = '%s' AND UZEIT > '%s' )) AND ( DATUM < '%s' OR ( DATUM = '%s' AND UZEIT <= '%s' ))",
+      my $condition = sprintf "SEQNO = '000' AND ( DATUM > '%s' OR ( DATUM = '%s' AND UZEIT > '%s' ) ) AND ( DATUM < '%s' OR ( DATUM = '%s' AND UZEIT <= '%s' ) )",
           $fromdate, $fromdate, $fromtime, $todate, $todate, $totime;
       my @options = ();
       while ($condition ne "") {
