@@ -83,6 +83,23 @@ sub init {
               printf "%s %d\n", $mte->{MTNAMELONG}, $mte->{MTCLASS};
             }
           } elsif ($self->mode =~ /netweaver::ccms::mte::check/) {
+            if (! @mtes) {
+              # one more try
+              $self->debug("no suitable mtes found in cache (or live). sleep and retry");
+              sleep 10;
+              $update = $self->update_tree_cache(1);
+              @tree_nodes = @{$update->{tree_nodes}};
+              %seen = ();
+              @mtes = sort {
+                  $a->{MTNAMELONG} cmp $b->{MTNAMELONG}
+              } grep {
+                $self->filter_name3($_->{MTNAMELONG})
+              } grep {
+                ! $seen{$_->tid_flat()}++;
+              } map {
+                  MTE->new(%{$_});
+              } @tree_nodes;
+            }
             $self->set_thresholds();
             foreach my $mte (@mtes) {
               next if grep { $mte->{MTCLASS} == $_ } (50, 70, 199);
@@ -229,7 +246,7 @@ sub update_tree_cache {
   $self->override_opt("name", $save_name);
   $self->override_opt("name2", $save_name2);
   my $statefile = $self->create_statefile(name => 'tree');
-  if (-f $delete_statefile) {
+  if (-f $delete_statefile or $self->opts->refreshmtes) {
     $force = 1;
     $self->debug("we had a connection problem, rebuild the tree cache");
     # here we delete all the ccms tree caches
@@ -433,6 +450,8 @@ sub mkMTNAMELONG {
 sub collect_details {
   my $self = shift;
   my $session = shift;
+  $self->debug(sprintf "collect_details with BAPI_SYSTEM_MTE_GETGENPROP %s",
+      Data::Dumper::Dumper($self->tid));
   my $fl = $session->function_lookup("BAPI_SYSTEM_MTE_GETGENPROP");
   my $fc = $fl->create_function_call;
   $fc->TID($self->tid);

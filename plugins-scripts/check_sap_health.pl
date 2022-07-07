@@ -233,6 +233,13 @@ $plugin->add_arg(
    The parameter limits the output to unique (or only the last) items.",
     required => 0,
 );
+$plugin->add_arg(
+    spec => 'refresh-mtes',
+    aliasfor => 'refreshmtes',
+    help => "--refresh-mtes
+   Rebuild the MTE cache every time. Can put some pressure on SAP, but avoids stale statefiles",
+    required => 0,
+);
 $plugin->add_default_args();
 
 $plugin->getopts();
