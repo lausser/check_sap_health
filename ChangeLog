@@ -1,3 +1,5 @@
+* 2022-07-22 3.0.1
+  bugfix in background-jobs
 * 2022-07-07 3.0.0.3
   refresh the cache if no mtes are found with --refresh-mtes
 * 2022-01-10 3.0.0.2

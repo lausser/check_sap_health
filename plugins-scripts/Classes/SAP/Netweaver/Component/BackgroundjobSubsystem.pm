@@ -25,9 +25,21 @@ sub init {
       $condition = $';
     }
     $fc->OPTIONS(\@options);
-    my @fields = qw(JOBNAME SDLUNAME STRTDATE STRTTIME ENDDATE ENDTIME STATUS SDLSTRTDT SDLSTRTTM);
+    # This was the original order
+    # my @fields = qw(JOBNAME SDLUNAME STRTDATE STRTTIME ENDDATE ENDTIME STATUS SDLSTRTDT SDLSTRTTM);
+    # beginning from 7.50 SP23 the returned values in $fc->DATA...->{WA} no
+    # longer corresponded to these fields. Instead (no matter how @fields
+    # was arranged), the returned order was always JOBNAME SDLSTRTDT SDLSTRTTM SDLUNAME STRTDATE STRTTIME ENDDATE ENDTIME STATUS.
+    # So this is then used as the the new @fields
+    my @fields = qw(JOBNAME SDLSTRTDT SDLSTRTTM SDLUNAME STRTDATE STRTTIME ENDDATE ENDTIME STATUS);
+    # For older systems this means, SAP returns the DATA in this order as it was
+    # told to do so.
+    # For newer systems, the @fields is only used to correctly identify the
+    # columns in the splitted WA string.
     $fc->FIELDS([map { { 'FIELDNAME' => $_ } } @fields]);
     $fc->invoke;
+    # This is just for debugging purposes if things go wrong again in the future
+    my @return_fields = $fc->FIELDS;
     @{$self->{jobs}} = sort {
       $a->{stop} <=> $b->{stop}
     } grep {
