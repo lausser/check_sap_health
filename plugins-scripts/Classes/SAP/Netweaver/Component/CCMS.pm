@@ -412,6 +412,19 @@ sub new {
   } elsif ($self->{MTCLASS} == MT_CLASS_SHORTTEXT) {
     bless $self, "MTE::ST";
   } else {
+    # es kann vorkommen, dass hier MTCLASS == MT_CLASS_VIRTUAL (=199)
+    # und MTNAMESHRT' => 'Q4X : System is not configured', MTINDEX' => '-99'
+    # und zwar bei fast allen Knoten. Zwischendurch so "Oberpunkte"
+    # 'MTNAMESHRT' => 'Verbucherstatus', 'MTMCNAME' => '',
+    # 'MTINDEX' => '1-', 'MTCLASS' => '199',
+    # was zu dem ekligen "UNKNOWN - no mtes" fuehrt.
+    # In dem Fall ist wahrscheinlich ein Reboot o.ae. schuld und man kann
+    # BAPI_SYSTEM_MON_GETTREE aufrufen sooft man will, es kommt nichts
+    # Brauchbares raus dabei. Und selbst wenn man noch die alte Cachedatei
+    # haette mit TID, der schon mal funktioniert hat, dann kracht's sicher
+    # auch, weil der CCMS-Baum andere MTINDEX o.ae. hat.
+    # Und das, nachdem ich ein sich ueber Monate hinziehendes Ticket bzgl.
+    # "no mtes" triumphierend geschlossen hatte.
   }
   return $self;
                 my $bapi = {
