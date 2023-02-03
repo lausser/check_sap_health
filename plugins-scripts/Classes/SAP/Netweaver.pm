@@ -196,7 +196,7 @@ sub create_statefile {
   $extension =~ s/\//_/g;
   $extension =~ s/\|/_/g;
   my $target = "";
-  $target .= $self->opts->ashost.'_'.$self->opts->sysnr if $self->opts->ashost;
+  $target .= $self->opts->ashost.'_'.$self->opts->sysnr if ($self->opts->ashost && $self->opts->sysnr);
   $target .= $self->opts->mshost if $self->opts->mshost;
   $target .= $self->opts->msserv if $self->opts->msserv;
   $target .= $self->opts->r3name if $self->opts->r3name;
