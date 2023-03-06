@@ -599,6 +599,17 @@ sub check {
       $perfdata->{critical} = $self->{TRESHY2R}.":";
     }
   }
+  if ($self->{THRESHDIR} == 0) {
+    # keine Doku gefunden, aber sowas gibt's tatsaechlich
+    # THRESHDIR ist 0, TRESHY2G, TRESHR2Y, THRESHSTAT, TRESHG2Y, TRESHY2R auch alle 0
+    # 'value' => 0,
+    # 'label' => 'Enqueue Server_PRL\\Enqueue\\Enqueue Server\\Granule Entries Actual Utilisation'
+    # In der Hoffnung, dass in solchen Faellen immer alles Null ist, werden Schwellwerte gesetzt.
+    # Denn moeglicherweise ist das nur ein voruebergehender Zustand, dann ist eine Nulllinie immer
+    # noch besser als eine Luecke.
+    $perfdata->{warning} = $self->{TRESHG2Y};
+    $perfdata->{critical} = $self->{TRESHY2R};
+  }
   $self->set_thresholds(warning => $perfdata->{warning}, critical => $perfdata->{critical}, metric => $perfdata->{label});
   delete $perfdata->{warning};
   delete $perfdata->{critical};
