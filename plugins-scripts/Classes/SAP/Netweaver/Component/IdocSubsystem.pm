@@ -47,6 +47,7 @@ sub init {
         [split(';', $_->{WA})];
     } @{$teds2fc->DATA};
 
+    $self->{num_idoc_status} = 0;
     my $fl = $self->session->function_lookup("RFC_READ_TABLE");
     my $fc = $fl->create_function_call;
     $fc->QUERY_TABLE("EDIDS");
@@ -59,10 +60,10 @@ sub init {
       $condition = $';
     }
     $fc->OPTIONS(\@options);
-    my @fields = qw(MANDT DOCNUM LOGDAT LOGTIM STATUS UNAME REPID STATXT STATYP);
+    my @fields = qw(MANDT DOCNUM LOGDAT LOGTIM COUNTR STATUS UNAME REPID STATXT STATYP);
     $fc->FIELDS([map { { 'FIELDNAME' => $_ } } @fields]);
     $fc->invoke;
-    @{$self->{idocs}} = grep {
+    @{$self->{all_idocs}} = grep {
       $self->filter_name($_->{MANDT}) && $self->filter_name2($_->{REPID});
     } map {
       my %hash = ();
@@ -74,8 +75,34 @@ sub init {
       $hash{STATUSDESCRP} = '-unknown-' if $@;
       IdocStatus->new(%hash);
     } @{$fc->DATA};
+    # Sortieren nach DOCNUM, LOGDAT+LOGTIM, COUNTR descending und dann
+    # nur den aktuellsten Eintrag pro DOCNUM rausfiltern.
+    my %seen = ();
+    @{$self->{idocs}} = map {
+      $seen{$_->{DOCNUM}} = 1;
+      $_;
+    } grep {
+      $self->{num_idoc_status}++;
+      not exists $seen{$_->{DOCNUM}};
+    } sort {
+      $a->{DOCNUM} <=> $b->{DOCNUM} or
+      $b->{TIMESTAMP} <=> $a->{TIMESTAMP} or
+      $b->{COUNTR} <=> $a->{COUNTR}
+    } @{$self->{all_idocs}};
+    delete $self->{all_idocs};
   }
 }
+
+sub check {
+  my ($self) = @_;
+  foreach my $status (@{$self->{idocs}}) {
+    $status->check();
+  }
+  if (! $self->check_messages()) {
+    $self->reduce_messages_short(sprintf "%d status checked, no problems found", $self->{num_idoc_status});
+  }
+}
+
 
 package IdocStatus;
 our @ISA = qw(Classes::SAP::Netweaver::TableItem);
@@ -83,7 +110,7 @@ use strict;
 
 sub finish {
   my ($self) = @_;
-  my @fields = qw(MANDT DOCNUM LOGDAT LOGTIM STATUS UNAME REPID STATXT STATYP);
+  my @fields = qw(MANDT DOCNUM LOGDAT LOGTIM COUNTR STATUS UNAME REPID STATXT STATYP);
   foreach (@fields) {
     if (! defined $self->{$_}) {
       $self->{$_} = '-undef-';
