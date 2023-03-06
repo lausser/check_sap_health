@@ -149,6 +149,7 @@ $plugin->add_arg(
     help => '--sysnr
    The system number',
     required => 0,
+    default => '00',
 );
 $plugin->add_arg(
     spec => 'mshost=s',
