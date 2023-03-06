@@ -1,3 +1,8 @@
+* 2023-03-06 3.1.0.1
+  bugfix in backgroundjob time select. (Thanks Ysincit)
+* 2022-11-22 3.1
+  check only the last status of an idoc
+  fix a bug in ccms, THRESHDIR=0 found
 * 2022-07-22 3.0.1
   bugfix in background-jobs
 * 2022-07-07 3.0.0.3

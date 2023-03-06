@@ -17,7 +17,7 @@ sub init {
     my $fc = $fl->create_function_call;
     $fc->QUERY_TABLE("TBTCO");
     $fc->DELIMITER(";");
-    my $condition = sprintf "ENDDATE >= '%s' AND ENDTIME > '%s'", $fromdate, $fromtime;
+    my $condition = sprintf "ENDDATE > '%s' OR ( ENDDATE = '%s' AND ENDTIME > '%s' )", $fromdate, $fromdate, $fromtime;
     my @options = ();
     while ($condition ne "") {
       $condition =~ /(.{1,70}(\s|$))/ms;

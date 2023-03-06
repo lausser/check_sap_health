@@ -164,8 +164,8 @@ sub init {
   } elsif ($self->mode =~ /^netweaver::processes::/) {
     $self->analyze_and_check_proc_subsystem("Classes::SAP::Netweaver::Component::ProcessSubsystem");
   } elsif ($self->mode =~ /^netweaver::idocs::/) {
-    $self->analyze_and_check_proc_subsystem("Classes::SAP::Netweaver::Component::IdocSubsystem");
-    $self->reduce_messages_short('no idoc problems');
+    $self->analyze_and_check_idoc_subsystem("Classes::SAP::Netweaver::Component::IdocSubsystem");
+    $self->reduce_messages_short(sprintf "%d idoc status checked, no problems found", $self->{components}->{idoc_subsystem}->{num_idoc_status});
   } elsif ($self->mode =~ /^netweaver::workload::/) {
     $self->analyze_and_check_proc_subsystem("Classes::SAP::Netweaver::Component::WorkloadSubsystem");
     $self->reduce_messages_short('no workload problems');
