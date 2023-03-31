@@ -71,7 +71,7 @@ sub check {
       } else {
         my $jobs = {};
         map { $jobs->{$_->{JOBNAME}.$_->{SDLUNAME}}++ } @{$self->{jobs}};
-        if ($self->mode =~ /netweaver::backgroundjobs::(failed|runtime)/) {
+        if ($self->mode =~ /netweaver::backgroundjobs::(failed|runtime|running-runtime)/) {
           foreach (@{$self->{jobs}}) {
             $_->check() if (! $self->opts->unique || ($self->opts->unique && ! --$jobs->{$_->{JOBNAME}.$_->{SDLUNAME}}));
           }
@@ -149,6 +149,30 @@ sub check {
         value => $self->{runtime},
         uom => 's',
     );
+  }
+  if ($self->mode =~ /netweaver::backgroundjobs::running-runtime/) {
+    if ($self->{STATUS} eq "R") {
+      $self->set_thresholds(metric => $self->{SDLUNAME}.'_'.$self->{JOBNAME}.'_runtime',
+         warning => 60, critical => 300);
+      $self->add_info(sprintf "job %s of user %s ran for %ds (still running)",
+          $self->{JOBNAME}, $self->{SDLUNAME}, $self->{runtime});
+      if ($self->check_thresholds(metric => $self->{SDLUNAME}.'_'.$self->{JOBNAME}.'_runtime',
+          value => $self->{runtime},)) {
+        my ($warning, $critical) = $self->get_thresholds(
+            metric => $self->{SDLUNAME}.'_'.$self->{JOBNAME}.'_runtime');
+        $self->annotate_info(sprintf "limit: %ds", $self->{runtime} > $critical ?
+            $critical : $warning);
+        $self->add_message($self->check_thresholds(
+            metric => $self->{SDLUNAME}.'_'.$self->{JOBNAME}.'_runtime',
+            value => $self->{runtime},
+        ));
+      }
+      $self->add_perfdata(
+          label => $self->{SDLUNAME}.'_'.$self->{JOBNAME}.'_runtime',
+          value => $self->{runtime},
+          uom => 's',
+      );
+    }
   }
 }
 
