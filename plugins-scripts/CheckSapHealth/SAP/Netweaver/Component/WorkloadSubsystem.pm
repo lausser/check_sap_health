@@ -1,5 +1,5 @@
-package Classes::SAP::Netweaver::Component::WorkloadSubsystem;
-our @ISA = qw(Classes::SAP::Netweaver::Item);
+package CheckSapHealth::SAP::Netweaver::Component::WorkloadSubsystem;
+our @ISA = qw(CheckSapHealth::SAP::Netweaver::Item);
 use strict;
 
 # SE24 CL_SWNC_CONSTANTS, GET_TASKTYPES
@@ -110,7 +110,7 @@ sub init {
       }
       next if ! $self->filter_name($self->translate_tasktype($tasktype));
       push(@{$self->{tasktypes}},
-          Classes::SAP::Netweaver::Component::WorkloadSubsystem::Task->new(
+          CheckSapHealth::SAP::Netweaver::Component::WorkloadSubsystem::Task->new(
               name => $self->translate_tasktype($tasktype),
               count => $avg_times->{$tasktype}->{COUNT},
               avg_response_time => $avg_times->{$tasktype}->{RESPTIAVG},
@@ -121,8 +121,8 @@ sub init {
 }
 
 
-package Classes::SAP::Netweaver::Component::WorkloadSubsystem::Task;
-our @ISA = qw(Classes::SAP::Netweaver::TableItem);
+package CheckSapHealth::SAP::Netweaver::Component::WorkloadSubsystem::Task;
+our @ISA = qw(CheckSapHealth::SAP::Netweaver::TableItem);
 use strict;
 
 sub check {

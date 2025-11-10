@@ -1,5 +1,5 @@
-package Classes::SAP::Netweaver::Component::IdocSubsystem;
-our @ISA = qw(Classes::SAP::Netweaver::Item);
+package CheckSapHealth::SAP::Netweaver::Component::IdocSubsystem;
+our @ISA = qw(CheckSapHealth::SAP::Netweaver::Item);
 use strict;
 
 sub init {
@@ -105,7 +105,7 @@ sub check {
 
 
 package IdocStatus;
-our @ISA = qw(Classes::SAP::Netweaver::TableItem);
+our @ISA = qw(CheckSapHealth::SAP::Netweaver::TableItem);
 use strict;
 
 sub finish {

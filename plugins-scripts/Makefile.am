@@ -7,18 +7,18 @@ GL_MODULES=\
   ../GLPlugin/lib/Monitoring/GLPlugin/Item.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/TableItem.pm
 EXTRA_MODULES=\
-  Classes/SAP.pm \
-  Classes/SAP/Netweaver.pm \
-  Classes/SAP/Netweaver/Item.pm \
-  Classes/SAP/Netweaver/TableItem.pm \
-  Classes/SAP/Netweaver/Component/CCMS.pm \
-  Classes/SAP/Netweaver/Component/SNAP.pm \
-  Classes/SAP/Netweaver/Component/UpdateSubsystem.pm \
-  Classes/SAP/Netweaver/Component/BackgroundjobSubsystem.pm \
-  Classes/SAP/Netweaver/Component/ProcessSubsystem.pm \
-  Classes/SAP/Netweaver/Component/IdocSubsystem.pm \
-  Classes/SAP/Netweaver/Component/WorkloadSubsystem.pm \
-  Classes/Device.pm
+  CheckSapHealth/SAP.pm \
+  CheckSapHealth/SAP/Netweaver.pm \
+  CheckSapHealth/SAP/Netweaver/Item.pm \
+  CheckSapHealth/SAP/Netweaver/TableItem.pm \
+  CheckSapHealth/SAP/Netweaver/Component/CCMS.pm \
+  CheckSapHealth/SAP/Netweaver/Component/SNAP.pm \
+  CheckSapHealth/SAP/Netweaver/Component/UpdateSubsystem.pm \
+  CheckSapHealth/SAP/Netweaver/Component/BackgroundjobSubsystem.pm \
+  CheckSapHealth/SAP/Netweaver/Component/ProcessSubsystem.pm \
+  CheckSapHealth/SAP/Netweaver/Component/IdocSubsystem.pm \
+  CheckSapHealth/SAP/Netweaver/Component/WorkloadSubsystem.pm \
+  CheckSapHealth/Device.pm
 
 SED=/bin/sed
 GREP=/bin/grep

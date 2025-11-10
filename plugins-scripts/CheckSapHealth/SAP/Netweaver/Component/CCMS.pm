@@ -1,5 +1,5 @@
-package Classes::SAP::Netweaver::Component::CCMS;
-our @ISA = qw(Classes::SAP::Netweaver::Item);
+package CheckSapHealth::SAP::Netweaver::Component::CCMS;
+our @ISA = qw(CheckSapHealth::SAP::Netweaver::Item);
 use strict;
 
 
@@ -198,7 +198,8 @@ sub init {
       $message =~ s/\s+$//g;
       chomp($message);
       if ($message =~ /__no_internals__/) {
-        $message =~ s/at $Monitoring::GLPlugin::pluginname line.*//g;
+        my $pluginname = File::Basename::basename($ENV{'NAGIOS_PLUGIN'} || $0);
+        $message =~ s/at \Q$pluginname\E line.*//g;
         $message =~ s/__no_internals__//g;
       }
       $self->add_unknown($message);
@@ -313,7 +314,7 @@ sub map_alvalue {
 
 
 package MTE;
-our @ISA = qw(Classes::SAP::Netweaver::TableItem);
+our @ISA = qw(CheckSapHealth::SAP::Netweaver::TableItem);
 use strict;
 
 #our @ISA = qw(SAP::CCMS);

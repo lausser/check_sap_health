@@ -1,5 +1,5 @@
-package Classes::SAP::Netweaver;
-our @ISA = qw(Classes::SAP);
+package CheckSapHealth::SAP::Netweaver;
+our @ISA = qw(CheckSapHealth::SAP);
 
 use strict;
 use File::Basename;
@@ -8,6 +8,7 @@ use Time::Local;
 use Digest::MD5 qw(md5_hex);
 use Data::Dumper;
 use AutoLoader;
+use File::Spec;
 our $AUTOLOAD;
 
 use constant { OK => 0, WARNING => 1, CRITICAL => 2, UNKNOWN => 3 };
@@ -78,6 +79,60 @@ sub check_rfc_and_model {
       $params{ABAP_DEBUG} = 0;
       $params{SAPGUI} = 0;
     }
+    if ($self->opts->snc) {
+      # The SNC flag to indicate whether the communication should use SNC protection	
+      # 0 - Do not apply SNC to connections.
+      # 1 - Apply SNC to connections.
+      $params{'SNC_MODE'} = '1';
+      # SNC_MYNAME
+      # Client SNC name (DataStage Server SNC Name).\
+      # It is also referred as client Personal Security Environment (PSE) Name.
+      # A valid client SNC name, which is equal to
+      # Distinguished Name(DN) of client PSE
+      # SNC_PARTNERNAME
+      # The communication partner's SNC name.
+      # Therefore, this is SAP server SNC PSE name.
+      # A valid SAP server SNC name, which is equal to
+      # Distinguished Name(DN) of SAP server PSE
+      # SNC_QOP
+      # The quality of protection level.
+      # Enter one of the following values:
+      # 1 - Apply authentication only.
+      # 2 - Apply authentication and integrity protection
+      # 3 - Apply authentication, integrity, and privacy protection (encryption)
+      # 8 - Apply global default protection (usually 3)
+      # 9 - Apply the maximum protection.
+      # SNC_LIB
+      # The external security product's library
+      # The path and file name for the SAP Cryptography library.
+
+      if ($self->opts->get('snclib')) {
+        $params{'SNC_LIB'} = $self->opts->get('snclib');
+      } else {
+        my $found_snc_lib = 0;
+        if (exists $ENV{LD_LIBRARY_PATH} && $ENV{LD_LIBRARY_PATH} ne '') {
+          foreach my $dir (split(/:/, $ENV{LD_LIBRARY_PATH})) {
+            my $snc_lib_path = File::Spec->catfile($dir, 'libsapcrypto.so');
+            if (-f $snc_lib_path) {
+              $params{'SNC_LIB'} = $snc_lib_path;
+              $self->debug("Found libsapcrypto.so in LD_LIBRARY_PATH: %s", $snc_lib_path);
+              $found_snc_lib = 1;
+              last; # Stop searching once found
+            }
+          }
+        }
+        if (!$found_snc_lib) {
+          $self->debug("libsapcrypto.so not found in LD_LIBRARY_PATH and --snc-lib not provided.");
+        }
+      }
+      if ($self->opts->sncmyname) {
+        $params{'SNC_MYNAME'} = $self->opts->sncmyname;
+      }
+      if ($self->opts->sncpartnername) {
+        $params{'SNC_PARTNERNAME'} = $self->opts->sncpartnername;
+      }
+      $params{'SNC_QOP'} = $self->opts->get('sncqop');
+    }
     $self->{tic} = Time::HiRes::time();
     my $session = undef;
     eval {
@@ -92,7 +147,7 @@ sub check_rfc_and_model {
           sprintf 'cannot create rfc connection');
       $self->debug(Data::Dumper::Dumper(\%params));
     } else {
-      $Classes::SAP::Netweaver::session = $session;
+      $CheckSapHealth::SAP::Netweaver::session = $session;
     }
     $self->{tac} = Time::HiRes::time();
   } else {
@@ -103,7 +158,7 @@ sub check_rfc_and_model {
 
 sub session {
   my $self = shift;
-  return $Classes::SAP::Netweaver::session;
+  return $CheckSapHealth::SAP::Netweaver::session;
 }
 
 sub set_failed_connection_flag {
@@ -154,20 +209,20 @@ sub init {
       # $fc
     }
   } elsif ($self->mode =~ /^netweaver::ccms::/) {
-    $self->analyze_and_check_ccms_subsystem("Classes::SAP::Netweaver::Component::CCMS");
+    $self->analyze_and_check_ccms_subsystem("CheckSapHealth::SAP::Netweaver::Component::CCMS");
   } elsif ($self->mode =~ /^netweaver::snap::/) {
-    $self->analyze_and_check_snap_subsystem("Classes::SAP::Netweaver::Component::SNAP");
+    $self->analyze_and_check_snap_subsystem("CheckSapHealth::SAP::Netweaver::Component::SNAP");
   } elsif ($self->mode =~ /^netweaver::updates::/) {
-    $self->analyze_and_check_snap_subsystem("Classes::SAP::Netweaver::Component::UpdateSubsystem");
+    $self->analyze_and_check_snap_subsystem("CheckSapHealth::SAP::Netweaver::Component::UpdateSubsystem");
   } elsif ($self->mode =~ /^netweaver::backgroundjobs::/) {
-    $self->analyze_and_check_snap_subsystem("Classes::SAP::Netweaver::Component::BackgroundjobSubsystem");
+    $self->analyze_and_check_snap_subsystem("CheckSapHealth::SAP::Netweaver::Component::BackgroundjobSubsystem");
   } elsif ($self->mode =~ /^netweaver::processes::/) {
-    $self->analyze_and_check_proc_subsystem("Classes::SAP::Netweaver::Component::ProcessSubsystem");
+    $self->analyze_and_check_proc_subsystem("CheckSapHealth::SAP::Netweaver::Component::ProcessSubsystem");
   } elsif ($self->mode =~ /^netweaver::idocs::/) {
-    $self->analyze_and_check_idoc_subsystem("Classes::SAP::Netweaver::Component::IdocSubsystem");
+    $self->analyze_and_check_idoc_subsystem("CheckSapHealth::SAP::Netweaver::Component::IdocSubsystem");
     $self->reduce_messages_short(sprintf "%d idoc status checked, no problems found", $self->{components}->{idoc_subsystem}->{num_idoc_status});
   } elsif ($self->mode =~ /^netweaver::workload::/) {
-    $self->analyze_and_check_proc_subsystem("Classes::SAP::Netweaver::Component::WorkloadSubsystem");
+    $self->analyze_and_check_proc_subsystem("CheckSapHealth::SAP::Netweaver::Component::WorkloadSubsystem");
     $self->reduce_messages_short('no workload problems');
   }
 }
@@ -272,14 +327,14 @@ sub strip {
 
 sub DESTROY {
   my ($self) = @_;
-  if (ref($self) ne "Classes::SAP") {
+  if (ref($self) ne "CheckSapHealth::SAP") {
     return;
     # Dieses DESTROY wird auch von irgendwelchen schwindligen Erbschleichern
     # aufgerufen, die mir hier die Session womoeglich zumachen.
   }
   my $plugin_exit = $?;
-  if ($Classes::SAP::Netweaver::session) {
-    $Classes::SAP::Netweaver::session->disconnect();
+  if ($CheckSapHealth::SAP::Netweaver::session) {
+    $CheckSapHealth::SAP::Netweaver::session->disconnect();
   }
   #$self->debug("disconnected");
   my $now = time;

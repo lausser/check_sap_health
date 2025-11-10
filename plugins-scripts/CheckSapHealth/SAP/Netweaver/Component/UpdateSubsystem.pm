@@ -1,5 +1,5 @@
-package Classes::SAP::Netweaver::Component::UpdateSubsystem;
-our @ISA = qw(Classes::SAP::Netweaver::Item);
+package CheckSapHealth::SAP::Netweaver::Component::UpdateSubsystem;
+our @ISA = qw(CheckSapHealth::SAP::Netweaver::Item);
 use strict;
 
 

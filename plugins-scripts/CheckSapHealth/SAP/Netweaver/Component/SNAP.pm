@@ -1,5 +1,5 @@
-package Classes::SAP::Netweaver::Component::SNAP;
-our @ISA = qw(Classes::SAP::Netweaver::Item);
+package CheckSapHealth::SAP::Netweaver::Component::SNAP;
+our @ISA = qw(CheckSapHealth::SAP::Netweaver::Item);
 use strict;
 
 

@@ -1,5 +1,5 @@
-package Classes::SAP::Netweaver::Component::ProcessSubsystem;
-our @ISA = qw(Classes::SAP::Netweaver::Item);
+package CheckSapHealth::SAP::Netweaver::Component::ProcessSubsystem;
+our @ISA = qw(CheckSapHealth::SAP::Netweaver::Item);
 use strict;
 
 
@@ -10,7 +10,7 @@ sub init {
   my @fields = qw(WP_TYP WP_STATUS WP_PID);
   $fc->invoke;
   @{$self->{workprocs}} = map {
-    WorkProc->new(
+    CheckSapHealth::SAP::Netweaver::Component::ProcessSubsystem::WorkProc->new(
         WP_TYP => $_->{WP_TYP},
         WP_PID => $_->{WP_PID},
         WP_STATUS => $_->{WP_STATUS},
@@ -61,8 +61,8 @@ sub check {
 }
 
 
-package WorkProc;
-our @ISA = qw(Classes::SAP::Netweaver::TableItem);
+package CheckSapHealth::SAP::Netweaver::Component::ProcessSubsystem::WorkProc;
+our @ISA = qw(CheckSapHealth::SAP::Netweaver::TableItem);
 use strict;
 
 sub rstrip {

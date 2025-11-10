@@ -1,5 +1,5 @@
-package Classes::SAP::Netweaver::Component::BackgroundjobSubsystem;
-our @ISA = qw(Classes::SAP::Netweaver::Item);
+package CheckSapHealth::SAP::Netweaver::Component::BackgroundjobSubsystem;
+our @ISA = qw(CheckSapHealth::SAP::Netweaver::Item);
 use strict;
 
 
@@ -85,7 +85,7 @@ sub check {
 }
 
 package Job;
-our @ISA = qw(Classes::SAP::Netweaver::TableItem);
+our @ISA = qw(CheckSapHealth::SAP::Netweaver::TableItem);
 use strict;
 use Date::Manip::Date;
 
