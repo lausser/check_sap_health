@@ -47,7 +47,16 @@ sub check_rfc_and_model {
     if ($self->opts->r3name) {
       $params{R3NAME} = $self->opts->r3name;
     }
+    if ($self->opts->saprouter) {
+      $params{SAPROUTER} = $self->opts->saprouter;
+      if (rindex($params{SAPROUTER}, "/H/", 0) != 0) {
+        $params{SAPROUTER} = "/H/".$params{SAPROUTER};
+      }
+    }
     if ($self->opts->group) {
+      # Wenn man nichts angibt, dann ist beim NWRFCSDK "PUBLIC" der Default.
+      # Sollte man aber nicht nehmen, da diese Group fuer SAPGUI-Benutzer
+      # gedacht ist. Besser ist "INTERFACE".
       $params{GROUP} = $self->opts->group;
     }
     if ($self->opts->gwhost) {
@@ -106,6 +115,9 @@ sub check_rfc_and_model {
       # The external security product's library
       # The path and file name for the SAP Cryptography library.
 
+      if ($self->opts->get('secudir')) {
+        $ENV{'SECUDIR'} = $self->opts->get('secudir');
+      }
       if ($self->opts->get('snclib')) {
         $params{'SNC_LIB'} = $self->opts->get('snclib');
       } else {
@@ -132,6 +144,7 @@ sub check_rfc_and_model {
         $params{'SNC_PARTNERNAME'} = $self->opts->sncpartnername;
       }
       $params{'SNC_QOP'} = $self->opts->get('sncqop');
+      $params{'SNC_SSO'} = '0';
     }
     $self->{tic} = Time::HiRes::time();
     my $session = undef;

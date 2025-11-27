@@ -157,6 +157,12 @@ sub run_plugin {
       default => '00',
   );
   $plugin->add_arg(
+      spec => 'saprouter=s',
+      help => '--saprouter
+     A SAPRouter, should start with /H/',
+      required => 0,
+  );
+  $plugin->add_arg(
       spec => 'mshost=s',
       help => '--mshost
      Hostname or IP-address of the message server',
@@ -224,6 +230,12 @@ sub run_plugin {
       spec => 'snc',
       help => '--snc
      This flag switches on the SNC protocol',
+      required => 0,
+  );
+  $plugin->add_arg(
+      spec => 'secudir=s',
+      help => '--secudir
+     Path to the directory with SAPSNCS.pse',
       required => 0,
   );
   $plugin->add_arg(
