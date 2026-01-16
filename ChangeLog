@@ -1,3 +1,5 @@
+* 2026-01-16 4.0.0.2
+  fix a bug in connection parameters. newer NWRFCSDK no longer tolerate SYSNR and CLIENT without 0-padding
 * 2025-11-27 4.0.0.1
   add --saprouter, snc fixes
 * 2025-11-10 4.0

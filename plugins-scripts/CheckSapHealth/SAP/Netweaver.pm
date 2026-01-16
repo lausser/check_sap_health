@@ -36,7 +36,7 @@ sub check_rfc_and_model {
       $params{ASHOST} = $self->opts->ashost;
     }
     if ($self->opts->sysnr) {
-      $params{SYSNR} = $self->opts->sysnr;
+      $params{SYSNR} = sprintf "%02d", $self->opts->sysnr;
     }
     if ($self->opts->mshost) {
       $params{MSHOST} = $self->opts->mshost;
@@ -66,7 +66,7 @@ sub check_rfc_and_model {
       $params{GWSERV} = $self->opts->gwserv;
     }
     if ($self->opts->client) {
-      $params{CLIENT} = $self->opts->client;
+      $params{CLIENT} = sprintf "%03d", $self->opts->client;
     }
     if ($self->opts->lang) {
       $params{LANG} = $self->opts->lang;
