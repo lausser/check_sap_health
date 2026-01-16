@@ -1,3 +1,5 @@
+* 2026-01-16 4.0.0.3
+  fix a bug in sysnr and clientnr, allow 0 as value
 * 2026-01-16 4.0.0.2
   fix a bug in connection parameters. newer NWRFCSDK no longer tolerate SYSNR and CLIENT without 0-padding
 * 2025-11-27 4.0.0.1
